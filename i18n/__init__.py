@@ -1,1 +1,1 @@
-from resource_loader import *
+from .resource_loader import *

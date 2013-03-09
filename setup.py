@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='python-i18n',
@@ -10,10 +10,10 @@ setup(
     url='https://github.com/tuvistavie/python-i18n',
     download_url='https://github.com/tuvistavie/python-i18n/archive/master.zip',
     license='MIT',
-    packages=find_packages(),
+    packages=['i18n', 'i18n.tests'],
     include_package_data=True,
     zip_safe=False,
-    test_suite='i18n/tests',
+    test_suite='i18n.tests',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',

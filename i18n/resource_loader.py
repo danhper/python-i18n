@@ -1,5 +1,5 @@
 import os.path
-import config
+from . import config
 import sys
 
 __all__ = ["register_loader", "I18nFileLoadError"]
