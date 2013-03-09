@@ -1,4 +1,6 @@
 import os.path
+import config
+import sys
 
 __all__ = ["register_loader", "I18nFileLoadError"]
 
@@ -10,7 +12,6 @@ class I18nFileLoadError(Exception):
 
     def __str__(self):
         return repr(self.value)
-
 
 def register_loader(loader_function, supported_extensions):
     for extension in supported_extensions:
@@ -29,12 +30,30 @@ def load_file(filename):
     except IOError as e:
         raise I18nFileLoadError("Error while opening file {0}: {1}".format(filename, e.message))
 
+def load_python(filename):
+    path, name = os.path.split(filename)
+    module_name, ext = os.path.splitext(name)
+    if path not in sys.path:
+        sys.path.append(path)
+    try:
+        translations = __import__(module_name)
+        if not hasattr(translations, config.current_locale()):
+            raise I18nFileLoadError("Error loading file {0}: {1} not defined".format(filename), config.current_locale())
+        return getattr(translations, config.current_locale())
+    except ImportError:
+        raise I18nFileLoadError("Error loading file {0}".format(filename))
+
+register_loader(load_python, ["py"])
+
 try:
     import yaml
 
     def load_yaml(filename):
         try:
-            return yaml.load(load_file(filename))
+            translations = yaml.load(load_file(filename))
+            if config.current_locale() not in translations:
+                raise I18nFileLoadError("Error loading file {0}: {1} not defined".format(filename), config.current_locale())
+            return translations[config.current_locale()]
         except yaml.scanner.ScannerError:
             raise I18nFileLoadError("Invalid YAML in file {0}.".format(filename))
 
@@ -47,7 +66,10 @@ try:
 
     def load_json(filename):
         try:
-            return json.loads(load_file(filename))
+            translations = json.loads(load_file(filename))
+            if config.current_locale() not in translations:
+                raise I18nFileLoadError("Error loading file {0}: {1} not defined".format(filename), config.current_locale())
+            return translations[config.current_locale()]
         except ValueError:
             raise I18nFileLoadError("Invalid JSON in file {0}.".format(filename))
 
