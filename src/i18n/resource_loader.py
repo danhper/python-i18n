@@ -1,12 +1,5 @@
 from formats import Format
 
-def load_resource(filename, format=None):
-    if not format:
-        format = guess_format(filename)
-    if format == Format.YAML:
-        pass
-    # elif format == Format.
-
 def guess_format(filename):
     if filename.endswith("yml"):
         return Format.YAML
