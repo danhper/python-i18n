@@ -22,7 +22,7 @@ def load_resource(filename):
         raise I18nFileLoadError("No loader available for extension {0}".format(extension))
     return loaders[extension](filename)
 
-def load_file(filename, loader_function):
+def load_file(filename):
     try:
         with open(filename, 'r') as f:
             return f.read()
@@ -39,5 +39,18 @@ try:
             raise I18nFileLoadError("Invalid YAML in file {0}.".format(filename))
 
     register_loader(load_yaml, ["yml", "yaml"])
+except ImportError:
+    pass
+
+try:
+    import json
+
+    def load_json(filename):
+        try:
+            return json.loads(load_file(filename))
+        except ValueError:
+            raise I18nFileLoadError("Invalid JSON in file {0}.".format(filename))
+
+    register_loader(load_json, ["json"])
 except ImportError:
     pass

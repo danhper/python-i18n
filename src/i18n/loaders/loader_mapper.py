@@ -1,3 +1,0 @@
-loader_map = {
-    # "yml":
-}
