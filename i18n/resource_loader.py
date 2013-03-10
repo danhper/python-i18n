@@ -4,16 +4,18 @@ from .loaders.loader import I18nFileLoadError
 
 loaders = {}
 
-def register_loader(loader_function, supported_extensions):
-    for extension in supported_extensions:
-        loaders[extension] = loader_function
+def register_loader(loader_class, supported_extensions):
+    if not hasattr(loader_class, "load_resource"):
+        raise ValueError("loader class should have a 'load_resource' method")
 
-def load_resource(filename):
-    extension = os.path.splitext(filename)[1:]
+    for extension in supported_extensions:
+        loaders[extension] = loader_class()
+
+def load_resource(filename, root_data):
+    extension = os.path.splitext(filename)[1][1:]
     if extension not in loaders:
         raise I18nFileLoadError("no loader available for extension {0}".format(extension))
-    return loaders[extension](filename)
-
+    return getattr(loaders[extension], "load_resource")(filename, root_data)
 
 def init_python_loader():
     from .loaders.python_loader import PythonLoader

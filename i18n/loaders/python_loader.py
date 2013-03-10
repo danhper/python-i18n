@@ -8,7 +8,7 @@ class PythonLoader(Loader):
     def __init__(self):
         super(PythonLoader, self).__init__()
 
-    def load_file(filename):
+    def load_file(self, filename):
         path, name = os.path.split(filename)
         module_name, ext = os.path.splitext(name)
         if path not in sys.path:
@@ -16,7 +16,7 @@ class PythonLoader(Loader):
         try:
             return __import__(module_name)
         except ImportError:
-            raise I18nFileLoadError("Error loading file {0}".format(filename))
+            raise I18nFileLoadError("error loading file {0}".format(filename))
 
     def parse_file(self, file_content):
         return file_content
