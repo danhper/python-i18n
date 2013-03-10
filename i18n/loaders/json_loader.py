@@ -9,6 +9,6 @@ class JsonLoader(Loader):
 
     def parse_file(self, file_content):
         try:
-            return json.load(file_content)
+            return json.loads(file_content)
         except ValueError as e:
-            raise I18nFileLoadError("Invalid JSON: {0}".format(e.strerror))
+            raise I18nFileLoadError("invalid JSON: {0}".format(e.strerror))

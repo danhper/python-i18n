@@ -31,5 +31,5 @@ class Loader(object):
         file_content = self.load_file(filename)
         data = self.parse_file(file_content)
         if not self.check_data(data, root_data):
-            raise I18nFileLoadError("error loading file {0}: {1} not defined".format(filename), root_data)
-        return data[root_data]
+            raise I18nFileLoadError("error getting data from {0}: {1} not defined".format(filename, root_data))
+        return self.get_data(data, root_data)
