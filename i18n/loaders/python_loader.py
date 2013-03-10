@@ -15,8 +15,8 @@ class PythonLoader(Loader):
             sys.path.append(path)
         try:
             return __import__(module_name)
-        except ImportError:
-            raise I18nFileLoadError("error loading file {0}".format(filename))
+        except ImportError as e:
+            raise I18nFileLoadError("error loading file {0}: {1}".format(filename, e.msg))
 
     def parse_file(self, file_content):
         return file_content

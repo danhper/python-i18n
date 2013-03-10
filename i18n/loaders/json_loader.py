@@ -11,4 +11,4 @@ class JsonLoader(Loader):
         try:
             return json.load(file_content)
         except ValueError as e:
-            raise I18nFileLoadError("Invalid JSON: {0}".format(e.message))
+            raise I18nFileLoadError("Invalid JSON: {0}".format(e.strerror))

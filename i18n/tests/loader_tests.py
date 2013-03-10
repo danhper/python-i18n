@@ -24,6 +24,16 @@ class TestFileLoader(unittest.TestCase):
         with self.assertRaisesRegexp(I18nFileLoadError, "error loading file .*"):
             resource_loader.load_resource("foo.py", "bar")
 
+    def test_yaml_loader_registration(self):
+        try:
+            import yaml
+            resource_loader.init_yaml_loader()
+            with self.assertRaisesRegexp(I18nFileLoadError, "error loading file .*"):
+                resource_loader.load_resource("foo.yml", "bar")
+        except ImportError:
+            with self.assertRaisesRegexp(I18nFileLoadError, "no loader .*"):
+                resource_loader.load_resource("foo.yml", "bar")
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
 unittest.TextTestRunner(verbosity=2).run(suite)

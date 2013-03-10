@@ -11,4 +11,4 @@ class YamlLoader(Loader):
         try:
             return yaml.loads(file_content)
         except yaml.scanner.ScannerError as e:
-            raise I18nFileLoadError("Invalid YAML: {0}".format(e.message))
+            raise I18nFileLoadError("Invalid YAML: {0}".format(e.strerror))
