@@ -1,7 +1,7 @@
 import os.path
 
 from .loaders.loader import I18nFileLoadError
-from .config import json_available, yaml_available
+from .config import json_available, yaml_available, settings
 
 loaders = {}
 
@@ -36,3 +36,8 @@ def init_yaml_loader():
 def init_json_loader():
     from .loaders.json_loader import JsonLoader
     register_loader(JsonLoader, ["json"])
+
+def load_config(filename):
+    settings_data = load_resource(filename, "settings")
+    for key, value in settings_data.items():
+        settings[key] = value

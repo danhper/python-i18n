@@ -4,10 +4,11 @@ import os.path
 
 from i18n import resource_loader
 from i18n.resource_loader import I18nFileLoadError
+from i18n import config
 from i18n.config import json_available, yaml_available
 
-RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
 
+RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
 
 class TestFileLoader(unittest.TestCase):
     def setUp(self):
@@ -59,6 +60,13 @@ class TestFileLoader(unittest.TestCase):
         data = resource_loader.load_resource(RESOURCE_FOLDER + "dummy_config.py", "settings")
         self.assertIn("foo", data)
         self.assertEqual("bar", data['foo'])
+
+    def test_load_file_with_strange_encoding(self):
+        resource_loader.init_json_loader()
+        config.set("encoding", "euc-jp")
+        data = resource_loader.load_resource(RESOURCE_FOLDER + "eucjp_config.json", "settings")
+        self.assertIn("ほげ", data)
+        self.assertEqual("ホゲ", data['ほげ'])
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)

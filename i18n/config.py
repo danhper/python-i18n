@@ -10,18 +10,22 @@ try:
 except ImportError:
     json_available = False
 
-
-config = {
+settings = {
     'file_name_format': '{filename}.{locale}.{format}',
     'file_format': 'yml' if yaml_available else 'json' if json_available else 'py',
     'available_locales': ['en'],
     'locale': 'en',
     'fallback': 'en',
+    'placeholder_delimiter': '%',
+    'error_on_missing': False,
+    'encoding': 'utf-8'
 }
 
-def current_locale():
-    return config['locale']
+def set(key, value):
+    settings[key] = value
 
-def load(filename):
-    with open(filename, 'r') as f:
-        pass
+def get(key):
+    return settings[key]
+
+def current_locale():
+    return settings['locale']
