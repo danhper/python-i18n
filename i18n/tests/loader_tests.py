@@ -72,7 +72,7 @@ class TestFileLoader(unittest.TestCase):
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {
             'foo': 'foo.ja.yml',
-            'foo.bar': os.path.join('/foo', 'bar.ja.yml'),
+            'foo.bar': os.path.join('foo', 'bar.ja.yml'),
             'foo.bar.baz': os.path.join('foo', 'bar', 'baz.en.yml'),
         }
         config.set('file_name_format', '{namespace}.{locale}.{format}')
@@ -91,6 +91,7 @@ class TestFileLoader(unittest.TestCase):
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)
 
+    @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
         config.set('file_name_format', '{namespace}.{locale}.{format}')
         resource_loader.init_yaml_loader()
