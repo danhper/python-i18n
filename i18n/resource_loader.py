@@ -1,7 +1,8 @@
 import os.path
 
 from .loaders.loader import I18nFileLoadError
-from .config import json_available, yaml_available, settings
+from . import config
+from .translator import add_translation
 
 loaders = {}
 
@@ -20,9 +21,9 @@ def load_resource(filename, root_data):
 
 def init_loaders():
     init_python_loader()
-    if yaml_available:
+    if config.yaml_available:
         init_yaml_loader()
-    if json_available:
+    if config.json_available:
         init_json_loader()
 
 def init_python_loader():
@@ -40,4 +41,30 @@ def init_json_loader():
 def load_config(filename):
     settings_data = load_resource(filename, "settings")
     for key, value in settings_data.items():
-        settings[key] = value
+        config.settings[key] = value
+
+def get_namespace_from_filepath(filepath):
+    namespace = os.path.dirname(filepath).strip(os.sep).replace(os.sep, config.get('namespace_delimiter'))
+    if '{namespace}' in config.get('file_name_format'):
+        try:
+            splitted_filename = os.path.basename(filepath).split('.')
+            if namespace:
+                namespace += config.get('namespace_delimiter')
+            namespace += splitted_filename[config.get('file_name_format').index('{namespace}')]
+        except ValueError:
+            raise I18nFileLoadError("incorrect file format.")
+    return namespace
+
+def load_translation_file(filepath):
+    translations = load_resource(filepath, config.get('locale'))
+    namespace = get_namespace_from_filepath(filepath)
+    load_translation_dic(translations, namespace)
+
+def load_translation_dic(dic, namespace):
+    if namespace:
+        namespace += config.get('namespace_delimiter')
+    for key, value in dic.items():
+        if type(value) == dict:
+            load_translation_dic(value, namespace + key)
+        else:
+            add_translation(namespace + config.get('namespace_delimiter') + key, value)

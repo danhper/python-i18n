@@ -68,6 +68,28 @@ class TestFileLoader(unittest.TestCase):
         self.assertIn("ほげ", data)
         self.assertEqual("ホゲ", data['ほげ'])
 
+    def test_get_namespace_from_filepath_with_filename(self):
+        tests = {
+            'foo': 'foo.ja.yml',
+            'foo.bar': '/foo/bar.ja.yml',
+            'foo.bar.baz': 'foo/bar/baz.en.yml',
+        }
+        config.set('file_name_format', '{namespace}.{locale}.{format}')
+        for expected, test_val in tests.items():
+            namespace = resource_loader.get_namespace_from_filepath(test_val)
+            self.assertEqual(expected, namespace)
+
+    def test_get_namespace_from_filepath_without_filename(self):
+        tests = {
+            '': 'ja.yml',
+            'foo': '/foo/ja.yml',
+            'foo.bar': 'foo/bar/en.yml',
+        }
+        config.set('file_name_format', '{locale}.{format}')
+        for expected, test_val in tests.items():
+            namespace = resource_loader.get_namespace_from_filepath(test_val)
+            self.assertEqual(expected, namespace)
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
 unittest.TextTestRunner(verbosity=2).run(suite)

@@ -5,7 +5,7 @@ from . import config
 translations = {}
 
 class TranslationFormatter(Template):
-    delimiter = config.get("placeholder_delimiter")
+    delimiter = config.get('placeholder_delimiter')
 
     """docstring for TranslationFormatter"""
     def __init__(self, template):
@@ -17,7 +17,10 @@ class TranslationFormatter(Template):
         else:
             return self.safe_substitute(**kwargs)
 
+def add_translation(key, value, locale=config.get('locale')):
+    translations[locale][key] = value
 
-def t(key, *args, **kwargs):
+
+def t(key, **kwargs):
     pass
     # translated_string =
