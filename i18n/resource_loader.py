@@ -67,4 +67,4 @@ def load_translation_dic(dic, namespace):
         if type(value) == dict:
             load_translation_dic(value, namespace + key)
         else:
-            add_translation(namespace + config.get('namespace_delimiter') + key, value)
+            add_translation(namespace + key, value)

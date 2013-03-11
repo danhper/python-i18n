@@ -6,6 +6,7 @@ from i18n import resource_loader
 from i18n.resource_loader import I18nFileLoadError
 from i18n import config
 from i18n.config import json_available, yaml_available
+from i18n import translator
 
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), 'resources')
@@ -90,8 +91,13 @@ class TestFileLoader(unittest.TestCase):
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)
 
-    def load_translation_file(self, RESOURCE_FOLDER):
-        pass
+    def test_load_translation_file(self):
+        config.set('file_name_format', '{namespace}.{locale}.{format}')
+        resource_loader.init_yaml_loader()
+        resource_loader.load_translation_file("foo.en.yml", os.path.join(RESOURCE_FOLDER, "translations"))
+
+        self.assertTrue(translator.has("foo.normal_key"))
+        self.assertTrue(translator.has("foo.parent.nested_key"))
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)

@@ -18,8 +18,10 @@ class TranslationFormatter(Template):
             return self.safe_substitute(**kwargs)
 
 def add_translation(key, value, locale=config.get('locale')):
-    translations[locale][key] = value
+    translations.setdefault(locale, {})[key] = value
 
+def has(key, locale=config.get('locale')):
+    return key in translations.get(locale, {})
 
 def t(key, **kwargs):
     pass
