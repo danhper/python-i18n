@@ -71,8 +71,8 @@ class TestFileLoader(unittest.TestCase):
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {
             'foo': 'foo.ja.yml',
-            'foo.bar': '/foo/bar.ja.yml',
-            'foo.bar.baz': 'foo/bar/baz.en.yml',
+            'foo.bar': os.path.join('/foo', 'bar.ja.yml'),
+            'foo.bar.baz': os.path.join('foo', 'bar', 'baz.en.yml'),
         }
         config.set('file_name_format', '{namespace}.{locale}.{format}')
         for expected, test_val in tests.items():
@@ -82,8 +82,8 @@ class TestFileLoader(unittest.TestCase):
     def test_get_namespace_from_filepath_without_filename(self):
         tests = {
             '': 'ja.yml',
-            'foo': '/foo/ja.yml',
-            'foo.bar': 'foo/bar/en.yml',
+            'foo': os.path.join('foo', 'ja.yml'),
+            'foo.bar': os.path.join('foo', 'bar', 'en.yml'),
         }
         config.set('file_name_format', '{locale}.{format}')
         for expected, test_val in tests.items():
@@ -92,7 +92,6 @@ class TestFileLoader(unittest.TestCase):
 
     def load_translation_file(self, RESOURCE_FOLDER):
         pass
-
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
