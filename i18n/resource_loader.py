@@ -55,8 +55,8 @@ def get_namespace_from_filepath(filepath):
             raise I18nFileLoadError("incorrect file format.")
     return namespace
 
-def load_translation_file(filepath):
-    translations = load_resource(filepath, config.get('locale'))
+def load_translation_file(filepath, base_directory):
+    translations = load_resource(os.path.join(base_directory, filepath), config.get('locale'))
     namespace = get_namespace_from_filepath(filepath)
     load_translation_dic(translations, namespace)
 

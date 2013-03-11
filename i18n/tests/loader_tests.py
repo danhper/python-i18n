@@ -8,7 +8,7 @@ from i18n import config
 from i18n.config import json_available, yaml_available
 
 
-RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
+RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), 'resources')
 
 class TestFileLoader(unittest.TestCase):
     def setUp(self):
@@ -39,32 +39,32 @@ class TestFileLoader(unittest.TestCase):
     def test_load_wrong_json_file(self):
         resource_loader.init_json_loader()
         with self.assertRaisesRegexp(I18nFileLoadError, "error getting data .*"):
-            resource_loader.load_resource(RESOURCE_FOLDER + "dummy_config.json", "foo")
+            resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.json"), "foo")
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_yaml_file(self):
         resource_loader.init_yaml_loader()
-        data = resource_loader.load_resource(RESOURCE_FOLDER + "dummy_config.yml", "settings")
+        data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.yml"), "settings")
         self.assertIn("foo", data)
         self.assertEqual("bar", data['foo'])
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_json_file(self):
         resource_loader.init_json_loader()
-        data = resource_loader.load_resource(RESOURCE_FOLDER + "dummy_config.json", "settings")
+        data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.json"), "settings")
         self.assertIn("foo", data)
         self.assertEqual("bar", data['foo'])
 
     def test_load_python_file(self):
         resource_loader.init_python_loader()
-        data = resource_loader.load_resource(RESOURCE_FOLDER + "dummy_config.py", "settings")
+        data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.py"), "settings")
         self.assertIn("foo", data)
         self.assertEqual("bar", data['foo'])
 
     def test_load_file_with_strange_encoding(self):
         resource_loader.init_json_loader()
         config.set("encoding", "euc-jp")
-        data = resource_loader.load_resource(RESOURCE_FOLDER + "eucjp_config.json", "settings")
+        data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "eucjp_config.json"), "settings")
         self.assertIn("ほげ", data)
         self.assertEqual("ホゲ", data['ほげ'])
 
@@ -89,6 +89,10 @@ class TestFileLoader(unittest.TestCase):
         for expected, test_val in tests.items():
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)
+
+    def load_translation_file(self, RESOURCE_FOLDER):
+        pass
+
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
