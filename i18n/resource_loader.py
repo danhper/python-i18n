@@ -68,3 +68,26 @@ def load_translation_dic(dic, namespace):
             load_translation_dic(value, namespace + key)
         else:
             add_translation(namespace + key, value)
+
+def search_translation(key):
+    splitted_key = key.split(config.get('namespace_delimiter'))
+    if len(splitted_key) < 2:
+        return
+    namespace, key = splitted_key[:-1], splitted_key[-1]
+    for directory in config.get('translation_path'):
+        if namespace[0] in os.listdir(directory):
+            subdir = os.path.join(directory, namespace[0])
+            if os.path.isdir(subdir):
+                recursive_search_dir(namespace[1:], subdir)
+            else:
+                return
+
+def recursive_search_dir(splitted_namespace, directory, root_dir):
+    if not splitted_namespace:
+        return
+    seeked_file = config.get('file_name_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=config.get('locale'))
+    dir_content = os.listdir(os.path.join(root_dir, directory))
+    if seeked_file in dir_content:
+        load_translation_file(os.path.join(directory, seeked_file), root_dir)
+    elif splitted_namespace[0] in dir_content:
+        recursive_search_dir(splitted_namespace[1:], os.path.join(directory, splitted_namespace[0]), root_dir)
