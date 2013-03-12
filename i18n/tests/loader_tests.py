@@ -100,6 +100,19 @@ class TestFileLoader(unittest.TestCase):
         self.assertTrue(translator.has("foo.normal_key"))
         self.assertTrue(translator.has("foo.parent.nested_key"))
 
+    def test_search_translation(self):
+        config.set('file_name_format', '{namespace}.{locale}.{format}')
+        config.set('translation_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
+        resource_loader.init_yaml_loader()
+        resource_loader.search_translation('foo.normal_key')
+        self.assertTrue(translator.has("foo.normal_key"))
+
+        resource_loader.init_json_loader()
+        config.set('file_format', 'json')
+
+        resource_loader.search_translation('bar.baz.qux')
+        self.assertTrue(translator.has("bar.baz.qux"))
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
 unittest.TextTestRunner(verbosity=2).run(suite)
