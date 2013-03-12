@@ -62,6 +62,7 @@ class TestFileLoader(unittest.TestCase):
         self.assertIn("foo", data)
         self.assertEqual("bar", data['foo'])
 
+    @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
         resource_loader.init_json_loader()
         config.set("encoding", "euc-jp")
@@ -100,6 +101,7 @@ class TestFileLoader(unittest.TestCase):
         self.assertTrue(translator.has("foo.normal_key"))
         self.assertTrue(translator.has("foo.parent.nested_key"))
 
+    @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation(self):
         config.set('file_name_format', '{namespace}.{locale}.{format}')
         config.set('translation_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
