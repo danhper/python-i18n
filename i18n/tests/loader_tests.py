@@ -6,14 +6,18 @@ from i18n import resource_loader
 from i18n.resource_loader import I18nFileLoadError
 from i18n import config
 from i18n.config import json_available, yaml_available
-from i18n import translator
+from i18n import translations
 
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), 'resources')
 
+
 class TestFileLoader(unittest.TestCase):
     def setUp(self):
         resource_loader.loaders = {}
+        translations.container = {}
+        config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
+        config.set('file_name_format', '{namespace}.{locale}.{format}')
 
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegexp(I18nFileLoadError, "no loader .*"):
@@ -76,7 +80,6 @@ class TestFileLoader(unittest.TestCase):
             'foo.bar': os.path.join('foo', 'bar.ja.yml'),
             'foo.bar.baz': os.path.join('foo', 'bar', 'baz.en.yml'),
         }
-        config.set('file_name_format', '{namespace}.{locale}.{format}')
         for expected, test_val in tests.items():
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)
@@ -94,26 +97,26 @@ class TestFileLoader(unittest.TestCase):
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
-        config.set('file_name_format', '{namespace}.{locale}.{format}')
         resource_loader.init_yaml_loader()
         resource_loader.load_translation_file("foo.en.yml", os.path.join(RESOURCE_FOLDER, "translations"))
 
-        self.assertTrue(translator.has("foo.normal_key"))
-        self.assertTrue(translator.has("foo.parent.nested_key"))
+        self.assertTrue(translations.has("foo.normal_key"))
+        self.assertTrue(translations.has("foo.parent.nested_key"))
+
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_search_translation_yaml(self):
+        resource_loader.init_yaml_loader()
+        config.set('file_format', 'yml')
+        resource_loader.search_translation('foo.normal_key')
+        self.assertTrue(translations.has("foo.normal_key"))
 
     @unittest.skipUnless(json_available, "json library not available")
-    def test_search_translation(self):
-        config.set('file_name_format', '{namespace}.{locale}.{format}')
-        config.set('translation_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
-        resource_loader.init_yaml_loader()
-        resource_loader.search_translation('foo.normal_key')
-        self.assertTrue(translator.has("foo.normal_key"))
-
+    def test_search_translation_json(self):
         resource_loader.init_json_loader()
         config.set('file_format', 'json')
 
         resource_loader.search_translation('bar.baz.qux')
-        self.assertTrue(translator.has("bar.baz.qux"))
+        self.assertTrue(translations.has('bar.baz.qux'))
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)

@@ -1,8 +1,8 @@
 from string import Template
 
 from . import config
-
-translations = {}
+from . import resource_loader
+from . import translations
 
 class TranslationFormatter(Template):
     delimiter = config.get('placeholder_delimiter')
@@ -17,12 +17,18 @@ class TranslationFormatter(Template):
         else:
             return self.safe_substitute(**kwargs)
 
-def add_translation(key, value, locale=config.get('locale')):
-    translations.setdefault(locale, {})[key] = value
-
-def has(key, locale=config.get('locale')):
-    return key in translations.get(locale, {})
-
 def t(key, **kwargs):
-    pass
-    # translated_string =
+    locale = kwargs.pop('locale', config.get('locale'))
+    if translations.has(key, locale):
+        return t_(key, locale=locale, **kwargs)
+    else:
+        resource_loader.search_translation(key, locale)
+        if translations.has(key, locale):
+            return t_(key, locale=locale, **kwargs)
+        elif locale != config.get('fallback'):
+            return t(key, locale=config.get('fallback'), **kwargs)
+    return key
+
+def t_(key, **kwargs):
+    locale = kwargs.pop('locale', config.get('locale'))
+    return TranslationFormatter(translations.get(key, locale=locale)).format(**kwargs)

@@ -1,8 +1,8 @@
 import os.path
 
-from .loaders.loader import I18nFileLoadError
 from . import config
-from .translator import add_translation
+from .loaders.loader import I18nFileLoadError
+from . import translations
 
 loaders = {}
 
@@ -56,9 +56,9 @@ def get_namespace_from_filepath(filepath):
     return namespace
 
 def load_translation_file(filepath, base_directory, locale=config.get('locale')):
-    translations = load_resource(os.path.join(base_directory, filepath), locale)
+    translations_dic = load_resource(os.path.join(base_directory, filepath), locale)
     namespace = get_namespace_from_filepath(filepath)
-    load_translation_dic(translations, namespace)
+    load_translation_dic(translations_dic, namespace)
 
 def load_translation_dic(dic, namespace):
     if namespace:
@@ -67,14 +67,14 @@ def load_translation_dic(dic, namespace):
         if type(value) == dict:
             load_translation_dic(value, namespace + key)
         else:
-            add_translation(namespace + key, value)
+            translations.add(namespace + key, value)
 
 def search_translation(key, locale=config.get('locale')):
     splitted_key = key.split(config.get('namespace_delimiter'))
-    if len(splitted_key) < 2:
+    if not splitted_key:
         return
-    namespace, key = splitted_key[:-1], splitted_key[-1]
-    for directory in config.get('translation_path'):
+    namespace = splitted_key[:-1]
+    for directory in config.get('load_path'):
         recursive_search_dir(namespace, '', directory, locale)
 
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
