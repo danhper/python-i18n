@@ -12,7 +12,7 @@ class TranslationFormatter(Template):
         super(TranslationFormatter, self).__init__(template)
 
     def format(self, **kwargs):
-        if config.get('error_on_missing'):
+        if config.get('error_on_missing_placeholder'):
             return self.substitute(**kwargs)
         else:
             return self.safe_substitute(**kwargs)
@@ -27,7 +27,10 @@ def t(key, **kwargs):
             return t_(key, locale=locale, **kwargs)
         elif locale != config.get('fallback'):
             return t(key, locale=config.get('fallback'), **kwargs)
-    return key
+    if config.get('error_on_missing_translation'):
+        raise KeyError('key {0} not found'.format(key))
+    else:
+        return key
 
 def t_(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))

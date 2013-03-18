@@ -18,7 +18,8 @@ settings = {
     'locale': 'en',
     'fallback': 'en',
     'placeholder_delimiter': '%',
-    'error_on_missing': False,
+    'error_on_missing_translation': False,
+    'error_on_missing_placeholder': False,
     'encoding': 'utf-8',
     'namespace_delimiter': '.',
     'dir_as_namespace': True
