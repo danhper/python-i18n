@@ -16,6 +16,11 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
         translations.add('foo.hi', 'Hello %{name} !')
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')
+        translations.add('foo.plural_test', {
+            'zero': 'No mail',
+            'one': '1 mail',
+            'many': '%{count} mails'
+        })
 
     def setUp(self):
         config.set('error_on_missing_translation', False)
@@ -52,3 +57,8 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('error_on_missing_placeholder', True)
         with self.assertRaises(KeyError):
             t('foo.hi')
+
+    def test_pluralization(self):
+        self.assertEqual(t('foo.plural_test', count=0), 'No mail')
+        self.assertEqual(t('foo.plural_test', count=1), '1 mail')
+        self.assertEqual(t('foo.plural_test', count=5), '5 mails')

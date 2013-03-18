@@ -20,11 +20,11 @@ class TranslationFormatter(Template):
 def t(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))
     if translations.has(key, locale):
-        return t_(key, locale=locale, **kwargs)
+        return translate(key, locale=locale, **kwargs)
     else:
         resource_loader.search_translation(key, locale)
         if translations.has(key, locale):
-            return t_(key, locale=locale, **kwargs)
+            return translate(key, locale=locale, **kwargs)
         elif locale != config.get('fallback'):
             return t(key, locale=config.get('fallback'), **kwargs)
     if config.get('error_on_missing_translation'):
@@ -32,6 +32,38 @@ def t(key, **kwargs):
     else:
         return key
 
-def t_(key, **kwargs):
+def translate(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))
-    return TranslationFormatter(translations.get(key, locale=locale)).format(**kwargs)
+    translation = translations.get(key, locale=locale)
+    if 'count' in kwargs:
+        translation = pluralize(key, translation, kwargs['count'])
+    return TranslationFormatter(translation).format(**kwargs)
+
+def pluralize(key, translation, count):
+    return_value = key
+    try:
+        if type(translation) != dict:
+            return_value = translation
+            raise ValueError('use of count witouth dict for key {0}'.format(key))
+        if count == 0:
+            if 'zero' in translation:
+                return translation['zero']
+            elif 'many' in translation:
+                return translation['many']
+            else:
+                raise ValueError('"none" and "many" not defined for key {0}'.format(key))
+        elif count == 1:
+            if 'one' in translation:
+                return translation['one']
+            else:
+                raise ValueError('"one" not definedfor key {0}'.format(key))
+        else:
+            if 'many' in translation:
+                return translation['many']
+            else:
+                raise ValueError('"many" not defined for key {0}'.format(key))
+    except ValueError as e:
+        if config.get('error_on_missing_plural'):
+            raise ValueError(e.strerror)
+        else:
+            return return_value

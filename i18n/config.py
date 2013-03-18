@@ -20,6 +20,7 @@ settings = {
     'placeholder_delimiter': '%',
     'error_on_missing_translation': False,
     'error_on_missing_placeholder': False,
+    'error_on_missing_plural': False,
     'encoding': 'utf-8',
     'namespace_delimiter': '.',
     'dir_as_namespace': True
