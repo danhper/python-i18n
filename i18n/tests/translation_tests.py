@@ -17,7 +17,7 @@ class TestTranslationFormat(unittest.TestCase):
         translations.add('foo.hi', 'Hello %{name} !')
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')
         translations.add('foo.plural_test', {
-            'zero': 'No mail',
+            'zero': 'no mail',
             'one': '1 mail',
             'many': '%{count} mails'
         })
@@ -59,6 +59,6 @@ class TestTranslationFormat(unittest.TestCase):
             t('foo.hi')
 
     def test_pluralization(self):
-        self.assertEqual(t('foo.plural_test', count=0), 'No mail')
+        self.assertEqual(t('foo.plural_test', count=0), 'no mail')
         self.assertEqual(t('foo.plural_test', count=1), '1 mail')
         self.assertEqual(t('foo.plural_test', count=5), '5 mails')

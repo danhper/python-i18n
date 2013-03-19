@@ -51,7 +51,7 @@ def pluralize(key, translation, count):
             elif 'many' in translation:
                 return translation['many']
             else:
-                raise ValueError('"none" and "many" not defined for key {0}'.format(key))
+                raise ValueError('"zero" and "many" not defined for key {0}'.format(key))
         elif count == 1:
             if 'one' in translation:
                 return translation['one']
