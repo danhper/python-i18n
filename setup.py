@@ -16,11 +16,12 @@ setup(
     test_suite='i18n.tests',
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Environment :: Web Environment',
+        'Environment :: Other Environment',
         'Intended Audience :: Developers',
         'License :: MIT',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Libraries'
         'Topic :: Internet :: WWW/HTTP'
     ],
 )
