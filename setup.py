@@ -22,6 +22,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries'
-        'Topic :: Internet :: WWW/HTTP'
     ],
 )

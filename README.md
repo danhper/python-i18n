@@ -53,5 +53,5 @@ Pluralization is based on Rail i18n module. By passing a `count` variable to you
         'many': 'You have %{count} new mails.'
     })
     i18n.t('mail_number', count=0) # You do not have any mail.
-    i18n.t('mail_number', count=1) # 'one': 'You have a new mail.',
-    i18n.t('mail_number', count=5) # 'You have 5 new mails.'
+    i18n.t('mail_number', count=1) # You have a new mail.
+    i18n.t('mail_number', count=5) # 'You have 5 new mails.
