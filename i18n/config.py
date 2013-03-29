@@ -11,7 +11,7 @@ except ImportError:
     json_available = False
 
 settings = {
-    'file_name_format': '{namespace}.{locale}.{format}',
+    'filename_format': '{namespace}.{locale}.{format}',
     'file_format': 'yml' if yaml_available else 'json' if json_available else 'py',
     'available_locales': ['en'],
     'load_path': [],

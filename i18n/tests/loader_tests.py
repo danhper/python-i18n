@@ -17,7 +17,7 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.loaders = {}
         translations.container = {}
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
-        config.set('file_name_format', '{namespace}.{locale}.{format}')
+        config.set('filename_format', '{namespace}.{locale}.{format}')
 
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegexp(I18nFileLoadError, "no loader .*"):
@@ -90,7 +90,7 @@ class TestFileLoader(unittest.TestCase):
             'foo': os.path.join('foo', 'ja.yml'),
             'foo.bar': os.path.join('foo', 'bar', 'en.yml'),
         }
-        config.set('file_name_format', '{locale}.{format}')
+        config.set('filename_format', '{locale}.{format}')
         for expected, test_val in tests.items():
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)

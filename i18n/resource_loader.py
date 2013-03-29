@@ -45,12 +45,12 @@ def load_config(filename):
 
 def get_namespace_from_filepath(filepath):
     namespace = os.path.dirname(filepath).strip(os.sep).replace(os.sep, config.get('namespace_delimiter'))
-    if '{namespace}' in config.get('file_name_format'):
+    if '{namespace}' in config.get('filename_format'):
         try:
             splitted_filename = os.path.basename(filepath).split('.')
             if namespace:
                 namespace += config.get('namespace_delimiter')
-            namespace += splitted_filename[config.get('file_name_format').index('{namespace}')]
+            namespace += splitted_filename[config.get('filename_format').index('{namespace}')]
         except ValueError:
             raise I18nFileLoadError("incorrect file format.")
     return namespace
@@ -78,7 +78,7 @@ def search_translation(key, locale=config.get('locale')):
         recursive_search_dir(namespace, '', directory, locale)
 
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
-    seeked_file = config.get('file_name_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=config.get('locale'))
+    seeked_file = config.get('filename_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=config.get('locale'))
     dir_content = os.listdir(os.path.join(root_dir, directory))
     if seeked_file in dir_content:
         load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
