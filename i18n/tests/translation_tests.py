@@ -64,3 +64,6 @@ class TestTranslationFormat(unittest.TestCase):
         self.assertEqual(t('foo.plural_test', count=1), '1 mail')
         self.assertEqual(t('foo.plural_test', count=4), 'only 4 mails')
         self.assertEqual(t('foo.plural_test', count=12), '12 mails')
+
+    def test_default(self):
+        self.assertEqual(t('inexistent_key', default='foo'), 'foo')

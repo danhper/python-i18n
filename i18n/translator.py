@@ -27,6 +27,8 @@ def t(key, **kwargs):
             return translate(key, locale=locale, **kwargs)
         elif locale != config.get('fallback'):
             return t(key, locale=config.get('fallback'), **kwargs)
+    if 'default' in kwargs:
+        return kwargs['default']
     if config.get('error_on_missing_translation'):
         raise KeyError('key {0} not found'.format(key))
     else:
