@@ -63,4 +63,14 @@ Pluralization is based on Rail i18n module. By passing a `count` variable to you
     })
     i18n.t('mail_number', count=0) # You do not have any mail.
     i18n.t('mail_number', count=1) # You have a new mail.
-    i18n.t('mail_number', count=5) # 'You have 5 new mails.
+    i18n.t('mail_number', count=5) # You have 5 new mails.
+
+### Fallback
+
+You can set a fallback which will be used when the key is not found in the default locale.
+
+    i18n.set('locale', 'jp')
+    i18n.set('fallback', 'en')
+    i18n.add_translation('foo', 'bar', locale='en')
+    i18n.t('foo') # bar
+
