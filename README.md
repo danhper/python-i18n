@@ -54,16 +54,18 @@ You can of course use placeholders in your translations. With the default config
 
 ### Pluralization
 
-Pluralization is based on Rail i18n module. By passing a `count` variable to your translation, it will be pluralized. The translation value should be a dictionnary with at least the keys `one` and `many`. You can add a `zero` key when needed, if it is not present `many` will be used instead. Here is a sample usage.
+Pluralization is based on Rail i18n module. By passing a `count` variable to your translation, it will be pluralized. The translation value should be a dictionnary with at least the keys `one` and `many`. You can add a `zero` or `few` key when needed, if it is not present `many` will be used instead. Here is a sample usage.
 
     i18n.add_translation('mail_number', {
         'zero': 'You do not have any mail.',
         'one': 'You have a new mail.',
+        'few': 'You only have %{count} mails.'
         'many': 'You have %{count} new mails.'
     })
     i18n.t('mail_number', count=0) # You do not have any mail.
     i18n.t('mail_number', count=1) # You have a new mail.
-    i18n.t('mail_number', count=5) # You have 5 new mails.
+    i18n.t('mail_number', count=3) # You only have 3 new mails.
+    i18n.t('mail_number', count=12) # You have 12 new mails.
 
 ### Fallback
 

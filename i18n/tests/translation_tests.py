@@ -19,6 +19,7 @@ class TestTranslationFormat(unittest.TestCase):
         translations.add('foo.plural_test', {
             'zero': 'no mail',
             'one': '1 mail',
+            'few': 'only %{count} mails',
             'many': '%{count} mails'
         })
 
@@ -61,4 +62,5 @@ class TestTranslationFormat(unittest.TestCase):
     def test_pluralization(self):
         self.assertEqual(t('foo.plural_test', count=0), 'no mail')
         self.assertEqual(t('foo.plural_test', count=1), '1 mail')
-        self.assertEqual(t('foo.plural_test', count=5), '5 mails')
+        self.assertEqual(t('foo.plural_test', count=4), 'only 4 mails')
+        self.assertEqual(t('foo.plural_test', count=12), '12 mails')

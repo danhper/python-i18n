@@ -57,6 +57,11 @@ def pluralize(key, translation, count):
                 return translation['one']
             else:
                 raise ValueError('"one" not definedfor key {0}'.format(key))
+        elif count <= config.get('plural_few'):
+            if 'few' in translation:
+                return translation['few']
+            else:
+                return translation['many']
         else:
             if 'many' in translation:
                 return translation['many']

@@ -23,7 +23,8 @@ settings = {
     'error_on_missing_plural': False,
     'encoding': 'utf-8',
     'namespace_delimiter': '.',
-    'dir_as_namespace': True
+    'dir_as_namespace': True,
+    'plural_few': 5
 }
 
 def set(key, value):
