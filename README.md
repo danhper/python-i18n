@@ -45,7 +45,7 @@ In the above example, the translation key is `foo.hi` and not just `hi`. This is
 #### Directory namespaces
 If your files are in subfolders, the foldernames are also used as namespaces, so for example if your translation root path is `/path/to/translations` and you have the file `/path/to/translations/my/app/name/foo.en.yml`, the translation namespace for the file will be `my.app.name` and the file keys will therefore be accessible from `my.app.name.foo.my_key`.
 
-## Funcionalities
+## Functionalities
 ### Placeholder
 
 You can of course use placeholders in your translations. With the default configuration, the placeholders are used by inserting `%{placeholder_name}` in the ntranslation string. Here is a sample usage.
