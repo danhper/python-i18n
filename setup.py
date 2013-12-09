@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='python-i18n',
-    version='0.1.2',
+    version='0.1.3',
     description='Translation library for Python',
     long_description=open('README.md').read(),
     author='Daniel Perez',
@@ -10,7 +10,7 @@ setup(
     url='https://github.com/tuvistavie/python-i18n',
     download_url='https://github.com/tuvistavie/python-i18n/archive/master.zip',
     license='MIT',
-    packages=['i18n', 'i18n.tests'],
+    packages=['i18n', 'i18n.loaders', 'i18n.tests'],
     include_package_data=True,
     zip_safe=True,
     test_suite='i18n.tests',
