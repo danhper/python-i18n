@@ -43,11 +43,11 @@ def load_config(filename):
     for key, value in settings_data.items():
         config.settings[key] = value
 
-def get_namespace_from_filepath(filepath):
-    namespace = os.path.dirname(filepath).strip(os.sep).replace(os.sep, config.get('namespace_delimiter'))
+def get_namespace_from_filepath(filename):
+    namespace = os.path.dirname(filename).strip(os.sep).replace(os.sep, config.get('namespace_delimiter'))
     if '{namespace}' in config.get('filename_format'):
         try:
-            splitted_filename = os.path.basename(filepath).split('.')
+            splitted_filename = os.path.basename(filename).split('.')
             if namespace:
                 namespace += config.get('namespace_delimiter')
             namespace += splitted_filename[config.get('filename_format').index('{namespace}')]
@@ -55,9 +55,9 @@ def get_namespace_from_filepath(filepath):
             raise I18nFileLoadError("incorrect file format.")
     return namespace
 
-def load_translation_file(filepath, base_directory, locale=config.get('locale')):
-    translations_dic = load_resource(os.path.join(base_directory, filepath), locale)
-    namespace = get_namespace_from_filepath(filepath)
+def load_translation_file(filename, base_directory, locale=config.get('locale')):
+    translations_dic = load_resource(os.path.join(base_directory, filename), locale)
+    namespace = get_namespace_from_filepath(filename)
     load_translation_dic(translations_dic, namespace)
 
 def load_translation_dic(dic, namespace):
@@ -69,13 +69,24 @@ def load_translation_dic(dic, namespace):
         else:
             translations.add(namespace + key, value)
 
+def load_directory(directory, locale=config.get('locale')):
+    for f in os.listdir(directory):
+        path = os.path.join(directory, f)
+        if os.path.isfile(path) and path.endswith(config.get('file_format')):
+            load_translation_file(f, directory, locale)
+
+
 def search_translation(key, locale=config.get('locale')):
     splitted_key = key.split(config.get('namespace_delimiter'))
     if not splitted_key:
         return
     namespace = splitted_key[:-1]
-    for directory in config.get('load_path'):
-        recursive_search_dir(namespace, '', directory, locale)
+    if not namespace and '{namespace}' not in config.get('filename_format'):
+        for directory in config.get('load_path'):
+            load_directory(directory, locale)
+    else:
+        for directory in config.get('load_path'):
+            recursive_search_dir(namespace, '', directory, locale)
 
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
     if not splitted_namespace:

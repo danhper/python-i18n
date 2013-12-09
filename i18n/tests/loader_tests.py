@@ -118,6 +118,14 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.search_translation('bar.baz.qux')
         self.assertTrue(translations.has('bar.baz.qux'))
 
+    @unittest.skipUnless(json_available, "json library not available")
+    def test_search_translation_without_ns(self):
+        resource_loader.init_json_loader()
+        config.set('file_format', 'json')
+        config.set('filename_format', '{locale}.{format}')
+        resource_loader.search_translation('foo')
+        self.assertTrue(translations.has('foo'))
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
 unittest.TextTestRunner(verbosity=2).run(suite)

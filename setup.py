@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='python-i18n',
-    version='0.1.3',
+    version='0.2.0',
     description='Translation library for Python',
     long_description=open('README.md').read(),
     author='Daniel Perez',
