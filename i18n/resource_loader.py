@@ -73,6 +73,8 @@ def load_directory(directory, locale=config.get('locale')):
     for f in os.listdir(directory):
         path = os.path.join(directory, f)
         if os.path.isfile(path) and path.endswith(config.get('file_format')):
+            if '{locale}' in config.get('filename_format') and not locale in f:
+                continue
             load_translation_file(f, directory, locale)
 
 

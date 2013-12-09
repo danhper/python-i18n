@@ -18,6 +18,7 @@ class TestFileLoader(unittest.TestCase):
         translations.container = {}
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
         config.set('filename_format', '{namespace}.{locale}.{format}')
+        config.set("encoding", "utf-8")
 
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegexp(I18nFileLoadError, "no loader .*"):
