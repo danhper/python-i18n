@@ -4,6 +4,8 @@ from . import config
 from . import resource_loader
 from . import translations
 
+MISSING_OTHER_STR = '"other" not defined for key {0}'
+
 class TranslationFormatter(Template):
     delimiter = config.get('placeholder_delimiter')
 
@@ -46,31 +48,22 @@ def pluralize(key, translation, count):
     try:
         if type(translation) != dict:
             return_value = translation
-            raise ValueError('use of count witouth dict for key {0}'.format(key))
+            raise KeyError('use of count witouth dict for key {0}'.format(key))
         if count == 0:
             if 'zero' in translation:
                 return translation['zero']
-            elif 'many' in translation:
-                return translation['many']
-            else:
-                raise ValueError('"zero" and "many" not defined for key {0}'.format(key))
         elif count == 1:
             if 'one' in translation:
                 return translation['one']
-            else:
-                raise ValueError('"one" not definedfor key {0}'.format(key))
         elif count <= config.get('plural_few'):
             if 'few' in translation:
                 return translation['few']
-            else:
-                return translation['many']
+        if 'other' in translation:
+            return translation['other']
         else:
-            if 'many' in translation:
-                return translation['many']
-            else:
-                raise ValueError('"many" not defined for key {0}'.format(key))
-    except ValueError as e:
+            raise KeyError(MISSING_OTHER_STR.format(key))
+    except KeyError as e:
         if config.get('error_on_missing_plural'):
-            raise ValueError(e.strerror)
+            raise KeyError(str(e))
         else:
             return return_value

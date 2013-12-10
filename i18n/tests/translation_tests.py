@@ -16,11 +16,18 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
         translations.add('foo.hi', 'Hello %{name} !')
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')
-        translations.add('foo.plural_test', {
+        translations.add('foo.basic_plural', {
+            'one': '1 elem',
+            'other': '%{count} elems'
+        })
+        translations.add('foo.plural', {
             'zero': 'no mail',
             'one': '1 mail',
             'few': 'only %{count} mails',
-            'many': '%{count} mails'
+            'other': '%{count} mails'
+        })
+        translations.add('foo.bad_plural', {
+            'bar': 'foo elems'
         })
 
     def setUp(self):
@@ -59,11 +66,25 @@ class TestTranslationFormat(unittest.TestCase):
         with self.assertRaises(KeyError):
             t('foo.hi')
 
-    def test_pluralization(self):
-        self.assertEqual(t('foo.plural_test', count=0), 'no mail')
-        self.assertEqual(t('foo.plural_test', count=1), '1 mail')
-        self.assertEqual(t('foo.plural_test', count=4), 'only 4 mails')
-        self.assertEqual(t('foo.plural_test', count=12), '12 mails')
+    def test_basic_pluralization(self):
+        self.assertEqual(t('foo.basic_plural', count=0), '0 elems')
+        self.assertEqual(t('foo.basic_plural', count=1), '1 elem')
+        self.assertEqual(t('foo.basic_plural', count=2), '2 elems')
+
+    def test_full_pluralization(self):
+        self.assertEqual(t('foo.plural', count=0), 'no mail')
+        self.assertEqual(t('foo.plural', count=1), '1 mail')
+        self.assertEqual(t('foo.plural', count=4), 'only 4 mails')
+        self.assertEqual(t('foo.plural', count=12), '12 mails')
+
+    def test_bad_pluralization(self):
+        self.assertEqual(t('foo.normal_key', count=5), 'normal_value')
+        config.set('error_on_missing_plural', True)
+        with self.assertRaises(KeyError):
+            t('foo.bad_plural', count=0)
+
+
+
 
     def test_default(self):
         self.assertEqual(t('inexistent_key', default='foo'), 'foo')
