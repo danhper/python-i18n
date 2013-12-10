@@ -4,12 +4,9 @@ from . import config
 from . import resource_loader
 from . import translations
 
-MISSING_OTHER_STR = '"other" not defined for key {0}'
-
 class TranslationFormatter(Template):
     delimiter = config.get('placeholder_delimiter')
 
-    """docstring for TranslationFormatter"""
     def __init__(self, template):
         super(TranslationFormatter, self).__init__(template)
 
@@ -61,9 +58,9 @@ def pluralize(key, translation, count):
         if 'other' in translation:
             return translation['other']
         else:
-            raise KeyError(MISSING_OTHER_STR.format(key))
+            raise KeyError('"other" not defined for key {0}'.format(key))
     except KeyError as e:
         if config.get('error_on_missing_plural'):
-            raise KeyError(str(e))
+            raise e
         else:
             return return_value

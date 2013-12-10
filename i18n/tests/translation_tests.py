@@ -36,6 +36,9 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('fallback', 'en')
         config.set('locale', 'en')
 
+    def test_basic_translation(self):
+        self.assertEqual(t('foo.normal_key'), 'normal_value')
+
     def test_missing_translation(self):
         self.assertEqual(t('foo.inexistent'), 'foo.inexistent')
 
@@ -43,9 +46,6 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('error_on_missing_translation', True)
         with self.assertRaises(KeyError):
             t('foo.inexistent')
-
-    def test_basic_translation(self):
-        self.assertEqual(t('foo.normal_key'), 'normal_value')
 
     def test_locale_change(self):
         config.set('locale', 'fr')
@@ -82,8 +82,6 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('error_on_missing_plural', True)
         with self.assertRaises(KeyError):
             t('foo.bad_plural', count=0)
-
-
 
 
     def test_default(self):
