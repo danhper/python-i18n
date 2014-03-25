@@ -6,7 +6,7 @@ setup(
     description='Translation library for Python',
     long_description=open('README.md').read(),
     author='Daniel Perez',
-    author_email='tuvistavie@gmail',
+    author_email='tuvistavie@gmail.com',
     url='https://github.com/tuvistavie/python-i18n',
     download_url='https://github.com/tuvistavie/python-i18n/archive/master.zip',
     license='MIT',
