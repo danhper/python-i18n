@@ -1,4 +1,5 @@
 from .. import config
+import sys
 
 class I18nFileLoadError(Exception):
     def __init__(self, value):
@@ -15,8 +16,12 @@ class Loader(object):
 
     def load_file(self, filename):
         try:
-            with open(filename, 'r', encoding=config.get('encoding')) as f:
-                return f.read()
+            if sys.version_info > (3,0):
+                with open(filename, 'r', encoding=config.get('encoding')) as f:
+                    return f.read()
+            else:
+                with open(filename, 'r') as f:
+                    return f.read()
         except IOError as e:
             raise I18nFileLoadError("error loading file {0}: {1}".format(filename, e.strerror))
 
