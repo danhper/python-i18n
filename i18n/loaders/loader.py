@@ -1,4 +1,5 @@
 from .. import config
+import io
 
 class I18nFileLoadError(Exception):
     def __init__(self, value):
@@ -15,7 +16,7 @@ class Loader(object):
 
     def load_file(self, filename):
         try:
-            with open(filename, 'r', encoding=config.get('encoding')) as f:
+            with io.open(filename, 'r', encoding=config.get('encoding')) as f:
                 return f.read()
         except IOError as e:
             raise I18nFileLoadError("error loading file {0}: {1}".format(filename, e.strerror))
