@@ -1,3 +1,5 @@
+#-*- encoding: utf-8 -*-
+
 import unittest
 import os
 import os.path
@@ -72,8 +74,8 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.init_json_loader()
         config.set("encoding", "euc-jp")
         data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "eucjp_config.json"), "settings")
-        self.assertIn("ほげ", data)
-        self.assertEqual("ホゲ", data['ほげ'])
+        self.assertIn(u"ほげ", data)
+        self.assertEqual(u"ホゲ", data[u'ほげ'])
 
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {
