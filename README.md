@@ -5,15 +5,13 @@ This library provides i18n functionality for Python 3 out of the box. The usage 
 
 ## Installation
 
-Simply download the package and run
+Just run
 
-    python setup.py install
+    pip install python-i18n
 
-Make sure you are using Python 3. If you want to use YAML translation files, you will need PyYAML installed as well. If you are using `easy_install`, you can use
+If you want to use YAML to store your translations, use
 
-    easy_install python-i18n[yaml]
-
-to install both.
+    pip install python-i18n[YAML]
 
 ## Usage
 ### Basic usage
