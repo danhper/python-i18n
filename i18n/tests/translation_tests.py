@@ -9,6 +9,7 @@ from i18n import config
 
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
 
+
 class TestTranslationFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -86,7 +87,6 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('error_on_missing_plural', True)
         with self.assertRaises(KeyError):
             t('foo.bad_plural', count=0)
-
 
     def test_default(self):
         self.assertEqual(t('inexistent_key', default='foo'), 'foo')

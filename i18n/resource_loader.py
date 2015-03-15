@@ -6,6 +6,7 @@ from . import translations
 
 loaders = {}
 
+
 def register_loader(loader_class, supported_extensions):
     if not hasattr(loader_class, "load_resource"):
         raise ValueError("loader class should have a 'load_resource' method")
@@ -13,11 +14,13 @@ def register_loader(loader_class, supported_extensions):
     for extension in supported_extensions:
         loaders[extension] = loader_class()
 
+
 def load_resource(filename, root_data):
     extension = os.path.splitext(filename)[1][1:]
     if extension not in loaders:
         raise I18nFileLoadError("no loader available for extension {0}".format(extension))
     return getattr(loaders[extension], "load_resource")(filename, root_data)
+
 
 def init_loaders():
     init_python_loader()
@@ -26,22 +29,27 @@ def init_loaders():
     if config.json_available:
         init_json_loader()
 
+
 def init_python_loader():
     from .loaders.python_loader import PythonLoader
     register_loader(PythonLoader, ["py"])
+
 
 def init_yaml_loader():
     from .loaders.yaml_loader import YamlLoader
     register_loader(YamlLoader, ["yml", "yaml"])
 
+
 def init_json_loader():
     from .loaders.json_loader import JsonLoader
     register_loader(JsonLoader, ["json"])
+
 
 def load_config(filename):
     settings_data = load_resource(filename, "settings")
     for key, value in settings_data.items():
         config.settings[key] = value
+
 
 def get_namespace_from_filepath(filename):
     namespace = os.path.dirname(filename).strip(os.sep).replace(os.sep, config.get('namespace_delimiter'))
@@ -55,10 +63,12 @@ def get_namespace_from_filepath(filename):
             raise I18nFileLoadError("incorrect file format.")
     return namespace
 
+
 def load_translation_file(filename, base_directory, locale=config.get('locale')):
     translations_dic = load_resource(os.path.join(base_directory, filename), locale)
     namespace = get_namespace_from_filepath(filename)
     load_translation_dic(translations_dic, namespace, locale)
+
 
 def load_translation_dic(dic, namespace, locale):
     if namespace:
@@ -68,6 +78,7 @@ def load_translation_dic(dic, namespace, locale):
             load_translation_dic(value, namespace + key, locale)
         else:
             translations.add(namespace + key, value, locale)
+
 
 def load_directory(directory, locale=config.get('locale')):
     for f in os.listdir(directory):
@@ -89,6 +100,7 @@ def search_translation(key, locale=config.get('locale')):
     else:
         for directory in config.get('load_path'):
             recursive_search_dir(namespace, '', directory, locale)
+
 
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
     if not splitted_namespace:

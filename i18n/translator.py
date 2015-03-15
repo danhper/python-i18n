@@ -4,6 +4,7 @@ from . import config
 from . import resource_loader
 from . import translations
 
+
 class TranslationFormatter(Template):
     delimiter = config.get('placeholder_delimiter')
 
@@ -15,6 +16,7 @@ class TranslationFormatter(Template):
             return self.substitute(**kwargs)
         else:
             return self.safe_substitute(**kwargs)
+
 
 def t(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))
@@ -33,12 +35,14 @@ def t(key, **kwargs):
     else:
         return key
 
+
 def translate(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))
     translation = translations.get(key, locale=locale)
     if 'count' in kwargs:
         translation = pluralize(key, translation, kwargs['count'])
     return TranslationFormatter(translation).format(**kwargs)
+
 
 def pluralize(key, translation, count):
     return_value = key
