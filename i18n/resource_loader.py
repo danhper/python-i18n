@@ -58,16 +58,16 @@ def get_namespace_from_filepath(filename):
 def load_translation_file(filename, base_directory, locale=config.get('locale')):
     translations_dic = load_resource(os.path.join(base_directory, filename), locale)
     namespace = get_namespace_from_filepath(filename)
-    load_translation_dic(translations_dic, namespace)
+    load_translation_dic(translations_dic, namespace, locale)
 
-def load_translation_dic(dic, namespace):
+def load_translation_dic(dic, namespace, locale):
     if namespace:
         namespace += config.get('namespace_delimiter')
     for key, value in dic.items():
         if type(value) == dict:
-            load_translation_dic(value, namespace + key)
+            load_translation_dic(value, namespace + key, locale)
         else:
-            translations.add(namespace + key, value)
+            translations.add(namespace + key, value, locale)
 
 def load_directory(directory, locale=config.get('locale')):
     for f in os.listdir(directory):
@@ -93,9 +93,9 @@ def search_translation(key, locale=config.get('locale')):
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
     if not splitted_namespace:
         return
-    seeked_file = config.get('filename_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=config.get('locale'))
+    seeked_file = config.get('filename_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=locale)
     dir_content = os.listdir(os.path.join(root_dir, directory))
     if seeked_file in dir_content:
         load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
     elif splitted_namespace[0] in dir_content:
-        recursive_search_dir(splitted_namespace[1:], os.path.join(directory, splitted_namespace[0]), root_dir)
+        recursive_search_dir(splitted_namespace[1:], os.path.join(directory, splitted_namespace[0]), root_dir, locale)

@@ -55,6 +55,10 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('fallback', 'fr')
         self.assertEqual(t('foo.hello', name='Bob'), 'Salut Bob !')
 
+    def test_fallback_from_resource(self):
+        config.set('fallback', 'ja')
+        self.assertEqual(t('foo.fallback_key'), 'フォールバック')
+
     def test_basic_placeholder(self):
         self.assertEqual(t('foo.hi', name='Bob'), 'Hello Bob !')
 
