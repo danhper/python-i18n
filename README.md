@@ -35,6 +35,9 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
     i18n.load_path.append('/path/to/translations')
     i18n.t('foo.hi') # Hello world !
 
+Please note that YAML format is used as default file format if you have `yaml` module installed.
+If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
+
 ### Namespaces
 
 #### File namespaces
