@@ -59,10 +59,13 @@ def pluralize(key, translation, count):
         elif count <= config.get('plural_few'):
             if 'few' in translation:
                 return translation['few']
+        # TODO: deprecate other
         if 'other' in translation:
             return translation['other']
+        if 'many' in translation:
+            return translation['many']
         else:
-            raise KeyError('"other" not defined for key {0}'.format(key))
+            raise KeyError('"many" not defined for key {0}'.format(key))
     except KeyError as e:
         if config.get('error_on_missing_plural'):
             raise e

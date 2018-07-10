@@ -61,7 +61,7 @@ Pluralization is based on Rail i18n module. By passing a `count` variable to you
     i18n.add_translation('mail_number', {
         'zero': 'You do not have any mail.',
         'one': 'You have a new mail.',
-        'few': 'You only have %{count} mails.'
+        'few': 'You only have %{count} mails.',
         'many': 'You have %{count} new mails.'
     })
     i18n.t('mail_number', count=0) # You do not have any mail.

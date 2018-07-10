@@ -23,13 +23,13 @@ class TestTranslationFormat(unittest.TestCase):
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')
         translations.add('foo.basic_plural', {
             'one': '1 elem',
-            'other': '%{count} elems'
+            'many': '%{count} elems'
         })
         translations.add('foo.plural', {
             'zero': 'no mail',
             'one': '1 mail',
             'few': 'only %{count} mails',
-            'other': '%{count} mails'
+            'many': '%{count} mails'
         })
         translations.add('foo.bad_plural', {
             'bar': 'foo elems'
