@@ -2,5 +2,8 @@ en:
   normal_key: normal_value
   parent:
     nested_key: nested_value
-
-
+  mail_number:
+    zero: You do not have any mail.
+    one: You have a new mail.
+    few: You only have %{count} mails.
+    many: You have %{count} new mails.
