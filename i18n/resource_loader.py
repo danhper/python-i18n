@@ -65,7 +65,9 @@ def get_namespace_from_filepath(filename):
 
 
 def load_translation_file(filename, base_directory, locale=config.get('locale')):
-    translations_dic = load_resource(os.path.join(base_directory, filename), locale)
+    skip_locale_root_data = config.get('skip_locale_root_data')
+    root_data = None if skip_locale_root_data else locale
+    translations_dic = load_resource(os.path.join(base_directory, filename), root_data)
     namespace = get_namespace_from_filepath(filename)
     load_translation_dic(translations_dic, namespace, locale)
 

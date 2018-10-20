@@ -94,3 +94,11 @@ class TestTranslationFormat(unittest.TestCase):
 
     def test_default(self):
         self.assertEqual(t('inexistent_key', default='foo'), 'foo')
+
+    def test_skip_locale_root_data(self):
+        config.set('filename_format', '{locale}.{format}')
+        config.set('file_format', 'json')
+        config.set('locale', 'gb')
+        config.set('skip_locale_root_data', True)
+        resource_loader.init_loaders()
+        self.assertEqual(t('foo'), 'Lorry')
