@@ -23,7 +23,8 @@ settings = {
     'error_on_missing_plural': False,
     'encoding': 'utf-8',
     'namespace_delimiter': '.',
-    'plural_few': 5
+    'plural_few': 5,
+    'skip_locale_root_data': False
 }
 
 def set(key, value):

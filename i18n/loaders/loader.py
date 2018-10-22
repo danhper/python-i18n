@@ -26,10 +26,10 @@ class Loader(object):
         raise NotImplementedError("the method parse_file has not been implemented for class {0}".format(self.__class__.name__))
 
     def check_data(self, data, root_data):
-        return root_data in data
+        return True if root_data is None else root_data in data
 
     def get_data(self, data, root_data):
-        return data[root_data]
+        return data if root_data is None else data[root_data]
 
     def load_resource(self, filename, root_data):
         file_content = self.load_file(filename)
