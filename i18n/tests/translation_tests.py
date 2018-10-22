@@ -87,6 +87,7 @@ class TestTranslationFormat(unittest.TestCase):
         self.assertEqual(t('foo.plural', count=12), '12 mails')
 
     def test_bad_pluralization(self):
+        config.set('error_on_missing_plural', False)
         self.assertEqual(t('foo.normal_key', count=5), 'normal_value')
         config.set('error_on_missing_plural', True)
         with self.assertRaises(KeyError):
@@ -102,3 +103,4 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('skip_locale_root_data', True)
         resource_loader.init_loaders()
         self.assertEqual(t('foo'), 'Lorry')
+        config.set('skip_locale_root_data', False)
