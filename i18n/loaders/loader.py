@@ -14,13 +14,23 @@ class Loader(object):
     """Base class to load resources"""
     def __init__(self):
         super(Loader, self).__init__()
+        self.memoization_dict = {}
 
-    def load_file(self, filename):
+    def _load_file_data(self, filename):
         try:
             with io.open(filename, 'r', encoding=config.get('encoding')) as f:
                 return f.read()
         except IOError as e:
             raise I18nFileLoadError("error loading file {0}: {1}".format(filename, e.strerror))
+
+    def load_file(self, filename):
+        enable_memoization = config.get('enable_memoization')
+        if enable_memoization:
+            if filename not in self.memoization_dict:
+                self.memoization_dict[filename] = self._load_file_data(filename)
+            return self.memoization_dict[filename]
+        else:
+            return self._load_file_data(filename)
 
     def parse_file(self, file_content):
         raise NotImplementedError("the method parse_file has not been implemented for class {0}".format(self.__class__.name__))

@@ -24,7 +24,8 @@ settings = {
     'encoding': 'utf-8',
     'namespace_delimiter': '.',
     'plural_few': 5,
-    'skip_locale_root_data': False
+    'skip_locale_root_data': False,
+    'enable_memoization': False
 }
 
 def set(key, value):
