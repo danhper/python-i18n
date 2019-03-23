@@ -9,6 +9,6 @@ class YamlLoader(Loader):
 
     def parse_file(self, file_content):
         try:
-            return yaml.load(file_content)
+            return yaml.load(file_content, Loader=yaml.FullLoader)
         except yaml.scanner.ScannerError as e:
             raise I18nFileLoadError("invalid YAML: {0}".format(str(e)))
