@@ -3,10 +3,6 @@
 
 This library provides i18n functionality for Python 3 out of the box. The usage is mostly based on Rails i18n library.
 
-# Fork differences from the upstream repo
-
-- Enable memoization of the translation files
-
 ## Installation
 
 Just run
