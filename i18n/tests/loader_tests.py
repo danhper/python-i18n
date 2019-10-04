@@ -5,9 +5,12 @@ from __future__ import unicode_literals
 import unittest
 import os
 import os.path
+import tempfile
 
+import i18n
 from i18n import resource_loader
 from i18n.resource_loader import I18nFileLoadError
+from i18n.translator import t
 from i18n import config
 from i18n.config import json_available, yaml_available
 from i18n import translations
@@ -70,6 +73,39 @@ class TestFileLoader(unittest.TestCase):
         data = resource_loader.load_resource(os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.py"), "settings")
         self.assertIn("foo", data)
         self.assertEqual("bar", data["foo"])
+
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_memoization_with_file(self):
+        '''This test creates a temporary file with the help of the
+        tempfile library and writes a simple key: value dictionary in it.
+        It will then use that file to load the translations and, after having
+        enabled memoization, try to access it, causing the file to be (hopefully)
+        memoized. It will then _remove_ the temporary file and try to access again,
+        asserting that an error is not raised, thus making sure the data is
+        actually loaded from memory and not from disk access.'''
+        memoization_file_name = 'memoize.en.yml'
+        # create the file and write the data in it
+        try:
+            d = tempfile.TemporaryDirectory()
+            tmp_dir_name = d.name
+        except AttributeError:
+            # we are running python2, use mkdtemp
+            tmp_dir_name = tempfile.mkdtemp()
+        fd = open('{}/{}'.format(tmp_dir_name, memoization_file_name), 'w')
+        fd.write('en:\n  key: value')
+        fd.close()
+        # create the loader and pass the file to it
+        resource_loader.init_yaml_loader()
+        resource_loader.load_translation_file(memoization_file_name, tmp_dir_name)
+        # try loading the value to make sure it's working
+        self.assertEqual(t('memoize.key'), 'value')
+        # now delete the file and directory
+        # we are running python2, delete manually
+        import shutil
+        shutil.rmtree(tmp_dir_name)
+        # test the translation again to make sure it's loaded from memory
+        self.assertEqual(t('memoize.key'), 'value')
+
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):

@@ -3,6 +3,10 @@
 
 This library provides i18n functionality for Python 3 out of the box. The usage is mostly based on Rails i18n library.
 
+# Fork differences from the upstream repo
+
+- Enable memoization of the translation files
+
 ## Installation
 
 Just run
@@ -38,6 +42,14 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
 Please note that YAML format is used as default file format if you have `yaml` module installed.
 If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
 
+### Memoization
+
+Setting the configuration value `enable_memoization` in the settings dir will load the files from disk the first time they
+are loaded and then store their content in memory. On the next use the file content will be provided from memory and not
+loaded from disk, preventing disk access. While this can be useful in some contexts, keep in mind there is no current way of
+issuing a command to the reloader to re-read the files from disk, so if you are updating your translation file without restarting
+the interpreter do not use this option.
+ 
 ### Namespaces
 
 #### File namespaces
