@@ -1,0 +1,27 @@
+{
+  "TOP_MENU": {
+    "TOP_BAR": {
+       "LOGS": "Logi",
+         "LOGS_ITEMS": {
+           "MAIN": "Główny proces",
+           "ERROR": "Błędy",
+           "CUSTOM": "Logi dodatkowe"
+            },
+       "NOTIFICATIONS": "Powiadomienia",
+       "CONFIG": "Konfiguracja",
+       "LICENSE": "Licencja"
+    }
+  },
+   "COMMON": {
+    "HOME": "Początek",
+    "START": "Start",
+    "STOP": "Stop",
+    "REFRESH": "Odśwież",
+    "LOAD_FILE": "Załaduj",
+    "DELETE_FILE": "Usuń",
+    "EXECUTE": "Wykonaj",
+    "DELETE": "Usuń",
+    "VERSION": "wersja",
+    "SUBMIT": "Wyślij"
+  }
+}

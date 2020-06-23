@@ -15,6 +15,14 @@ from i18n import config
 from i18n.config import json_available, yaml_available
 from i18n import translations
 
+try:
+    reload  # Python 2.7
+except NameError:
+    try:
+        from importlib import reload  # Python 3.4+
+    except ImportError:
+        from imp import reload  # Python 3.0 - 3.3
+
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), "resources")
 
@@ -23,6 +31,7 @@ class TestFileLoader(unittest.TestCase):
     def setUp(self):
         resource_loader.loaders = {}
         translations.container = {}
+        reload(config)
         config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations")])
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
@@ -177,6 +186,54 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{locale}.{format}")
         resource_loader.search_translation("foo")
         self.assertTrue(translations.has("foo"))
+
+    @unittest.skipUnless(json_available, "json library not available")
+    def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", ["en", "pl"])
+        resource_loader.search_translation("COMMON.VERSION")
+        self.assertTrue(translations.has("COMMON.VERSION"))
+        self.assertEqual(translations.get("COMMON.VERSION"), "version")
+
+    @unittest.skipUnless(json_available, "json library not available")
+    def test_search_translation_without_ns_nested_dict__two_levels_neting__other_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", ["en", "pl"])
+        resource_loader.search_translation("COMMON.VERSION", locale="pl")
+        self.assertTrue(translations.has("COMMON.VERSION", locale="pl"))
+        self.assertEqual(translations.get("COMMON.VERSION", locale="pl"), "wersja")
+
+    @unittest.skipUnless(json_available, "json library not available")
+    def test_search_translation_without_ns_nested_dict__default_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", "en")
+        resource_loader.search_translation("TOP_MENU.TOP_BAR.LOGS")
+        self.assertTrue(translations.has("TOP_MENU.TOP_BAR.LOGS"))
+        self.assertEqual(translations.get("TOP_MENU.TOP_BAR.LOGS"), "Logs")
+
+    @unittest.skipUnless(json_available, "json library not available")
+    def test_search_translation_without_ns_nested_dict__other_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", "en")
+        resource_loader.search_translation("TOP_MENU.TOP_BAR.LOGS", locale="pl")
+        self.assertTrue(translations.has("TOP_MENU.TOP_BAR.LOGS", locale="pl"))
+        self.assertEqual(translations.get("TOP_MENU.TOP_BAR.LOGS", locale="pl"), "Logi")
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)

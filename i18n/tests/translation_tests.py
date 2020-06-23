@@ -11,6 +11,14 @@ from i18n.translator import t
 from i18n import translations
 from i18n import config
 
+try:
+    reload  # Python 2.7
+except NameError:
+    try:
+        from importlib import reload  # Python 3.4+
+    except ImportError:
+        from imp import reload  # Python 3.0 - 3.3
+
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
 
 
@@ -18,6 +26,7 @@ class TestTranslationFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         resource_loader.init_loaders()
+        reload(config)
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
         translations.add('foo.hi', 'Hello %{name} !')
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')
@@ -104,3 +113,21 @@ class TestTranslationFormat(unittest.TestCase):
         resource_loader.init_loaders()
         self.assertEqual(t('foo'), 'Lorry')
         config.set('skip_locale_root_data', False)
+
+    def test_skip_locale_root_data_nested_json_dict__default_locale(self):
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", "en")
+        resource_loader.init_json_loader()
+        self.assertEqual(t('COMMON.START'), 'Start')
+
+    def test_skip_locale_root_data_nested_json_dict__other_locale(self):
+        config.set("file_format", "json")
+        config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations", "nested_dict_json")])
+        config.set("filename_format", "{locale}.{format}")
+        config.set('skip_locale_root_data', True)
+        config.set("locale", "en")
+        resource_loader.init_json_loader()
+        self.assertEqual(t('COMMON.EXECUTE', locale="pl"), 'Wykonaj')
