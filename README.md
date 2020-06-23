@@ -1,4 +1,4 @@
-# python-i18n [![Build Status](https://travis-ci.org/danhper/python-i18n.png?branch=master)](https://travis-ci.org/danhper/python-i18n) [![Coverage Status](https://coveralls.io/repos/danhper/python-i18n/badge.png?branch=master)](https://coveralls.io/r/danhper/python-i18n?branch=master) [![Code Climate](https://codeclimate.com/github/danhper/python-i18n/badges/gpa.svg)](https://codeclimate.com/github/danhper/python-i18n)
+# python-i18n [![Build Status](https://travis-ci.org/danhper/python-i18n.png?branch=master)](https://travis-ci.org/danhper/python-i18n) [![Coverage Status](https://coveralls.io/repos/github/danhper/python-i18n/badge.svg?branch=master)](https://coveralls.io/github/danhper/python-i18n?branch=master) [![Code Climate](https://codeclimate.com/github/danhper/python-i18n/badges/gpa.svg)](https://codeclimate.com/github/danhper/python-i18n)
 
 
 This library provides i18n functionality for Python 3 out of the box. The usage is mostly based on Rails i18n library.
