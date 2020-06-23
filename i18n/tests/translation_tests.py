@@ -11,6 +11,14 @@ from i18n.translator import t
 from i18n import translations
 from i18n import config
 
+try:
+    reload  # Python 2.7
+except NameError:
+    try:
+        from importlib import reload  # Python 3.4+
+    except ImportError:
+        from imp import reload  # Python 3.0 - 3.3
+
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + 'resources' + os.sep
 
 
@@ -18,6 +26,7 @@ class TestTranslationFormat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         resource_loader.init_loaders()
+        reload(config)
         config.set('load_path', [os.path.join(RESOURCE_FOLDER, 'translations')])
         translations.add('foo.hi', 'Hello %{name} !')
         translations.add('foo.hello', 'Salut %{name} !', locale='fr')

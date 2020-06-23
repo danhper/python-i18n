@@ -15,6 +15,14 @@ from i18n import config
 from i18n.config import json_available, yaml_available
 from i18n import translations
 
+try:
+    reload  # Python 2.7
+except NameError:
+    try:
+        from importlib import reload  # Python 3.4+
+    except ImportError:
+        from imp import reload  # Python 3.0 - 3.3
+
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), "resources")
 
@@ -23,6 +31,7 @@ class TestFileLoader(unittest.TestCase):
     def setUp(self):
         resource_loader.loaders = {}
         translations.container = {}
+        reload(config)
         config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations")])
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
