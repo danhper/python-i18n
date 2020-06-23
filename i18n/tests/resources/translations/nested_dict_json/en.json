@@ -1,0 +1,27 @@
+{
+  "TOP_MENU": {
+    "TOP_BAR": {
+      "LOGS": "Logs",
+      "LOGS_ITEMS": {
+        "MAIN": "Main process",
+        "ERROR": "Errors",
+        "CUSTOM": "Custom Logs"
+      },
+      "NOTIFICATIONS": "Notifications",
+      "CONFIG": "Config",
+      "LICENSE": "License"
+    }
+  },
+  "COMMON": {
+    "HOME": "Home",
+    "START": "Start",
+    "STOP": "Stop",
+    "REFRESH": "Refresh",
+    "LOAD_FILE": "Load file",
+    "DELETE_FILE": "Delete file",
+    "EXECUTE": "Execute",
+    "DELETE": "Delete",
+    "VERSION": "version",
+    "SUBMIT": "Submit"
+  }
+}
