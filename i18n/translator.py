@@ -39,6 +39,15 @@ def t(key, **kwargs):
 def translate(key, **kwargs):
     locale = kwargs.pop('locale', config.get('locale'))
     translation = translations.get(key, locale=locale)
+    if isinstance(translation, list):
+        # if we can apply plural/formats to the items, let's try
+        if all(isinstance(data, (str, dict)) for data in translation):
+            # if needed, we should format every item in the list
+            if 'count' in kwargs:
+                translation = [pluralize(key, data, kwargs['count']) for data in translation]
+            # items may be non-plural dictionnaries, which we cannot format
+            return [TranslationFormatter(data).format(**kwargs) if isinstance(data, str) else data for data in translation]
+        return translation
     if 'count' in kwargs:
         translation = pluralize(key, translation, kwargs['count'])
     return TranslationFormatter(translation).format(**kwargs)
