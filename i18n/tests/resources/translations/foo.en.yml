@@ -7,3 +7,25 @@ en:
     one: You have a new mail.
     few: You only have %{count} mails.
     many: You have %{count} new mails.
+  months:
+    - January
+    - Februrary
+    - March
+    - April
+    - May
+    - June
+    - July
+    - August
+    - September
+    - October
+    - November
+    - December
+  welcome:
+    - Hi %{user}
+    - Welcome to %{user}
+  welcome2:
+    - one: A new user just joined!
+      many: Some new users just came!
+    - one: Hello new user!
+      few: We may need more pylons soon
+      many: Too many new users, we need more pylons!

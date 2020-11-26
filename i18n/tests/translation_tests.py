@@ -131,3 +131,10 @@ class TestTranslationFormat(unittest.TestCase):
         config.set("locale", "en")
         resource_loader.init_json_loader()
         self.assertEqual(t('COMMON.EXECUTE', locale="pl"), 'Wykonaj')
+
+    def test_basic_list(self):
+        self.assertEqual(len(t('foo.months')), 12)
+    
+    def test_formatted_list(self):
+        self.assertEqual(t('foo.welcome', user="someone")[0], "Hi someone")
+        self.assertEqual(t('foo.welcome2', count=2)[1], "We may need more pylons soon")
