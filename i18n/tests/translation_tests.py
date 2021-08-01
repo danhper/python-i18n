@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from __future__ import unicode_literals
+from i18n.exceptions import MissingTranslationError, PluralizeTranslationError
 
 import unittest
 import os
@@ -58,7 +59,7 @@ class TestTranslationFormat(unittest.TestCase):
 
     def test_missing_translation_error(self):
         config.set('error_on_missing_translation', True)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(MissingTranslationError):
             t('foo.inexistent')
 
     def test_locale_change(self):
@@ -81,7 +82,7 @@ class TestTranslationFormat(unittest.TestCase):
 
     def test_missing_placeholder_error(self):
         config.set('error_on_missing_placeholder', True)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(MissingTranslationError):
             t('foo.hi')
 
     def test_basic_pluralization(self):
@@ -99,7 +100,7 @@ class TestTranslationFormat(unittest.TestCase):
         config.set('error_on_missing_plural', False)
         self.assertEqual(t('foo.normal_key', count=5), 'normal_value')
         config.set('error_on_missing_plural', True)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(PluralizeTranslationError):
             t('foo.bad_plural', count=0)
 
     def test_default(self):

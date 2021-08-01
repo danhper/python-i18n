@@ -1,3 +1,4 @@
+from i18n.exceptions import MissingTranslationError, PluralizeTranslationError
 from string import Template
 
 from . import config
@@ -13,7 +14,10 @@ class TranslationFormatter(Template):
 
     def format(self, **kwargs):
         if config.get('error_on_missing_placeholder'):
-            return self.substitute(**kwargs)
+            try:
+                return self.substitute(**kwargs)
+            except KeyError as e:
+                raise MissingTranslationError from e
         else:
             return self.safe_substitute(**kwargs)
 
@@ -31,7 +35,7 @@ def t(key, **kwargs):
     if 'default' in kwargs:
         return kwargs['default']
     if config.get('error_on_missing_translation'):
-        raise KeyError('key {0} not found'.format(key))
+        raise MissingTranslationError('key {0} not found'.format(key))
     else:
         return key
 
@@ -49,7 +53,7 @@ def pluralize(key, translation, count):
     try:
         if type(translation) != dict:
             return_value = translation
-            raise KeyError('use of count witouth dict for key {0}'.format(key))
+            raise PluralizeTranslationError('use of count without dict for key {0}'.format(key))
         if count == 0:
             if 'zero' in translation:
                 return translation['zero']
@@ -65,8 +69,8 @@ def pluralize(key, translation, count):
         if 'many' in translation:
             return translation['many']
         else:
-            raise KeyError('"many" not defined for key {0}'.format(key))
-    except KeyError as e:
+            raise PluralizeTranslationError('"many" not defined for key {0}'.format(key))
+    except PluralizeTranslationError as e:
         if config.get('error_on_missing_plural'):
             raise e
         else:
