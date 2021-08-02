@@ -187,6 +187,15 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.search_translation("foo")
         self.assertTrue(translations.has("foo"))
 
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_search_translation_without_ns_yaml__nested(self):
+        resource_loader.init_yaml_loader()
+        config.set("file_format", "yml")
+        config.set("filename_format", "{locale}.{format}")
+        config.set("skip_locale_root_data", True)
+        resource_loader.search_translation("nested_dict_yaml.foo")
+        self.assertTrue(translations.has("nested_dict_yaml.foo"))
+
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale(self):
         resource_loader.init_json_loader()

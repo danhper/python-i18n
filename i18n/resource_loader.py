@@ -108,7 +108,7 @@ def search_translation(key, locale=config.get('locale')):
 
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=config.get('locale')):
     if not splitted_namespace:
-        return
+        splitted_namespace = [""]
     seeked_file = config.get('filename_format').format(namespace=splitted_namespace[0], format=config.get('file_format'), locale=locale)
     dir_content = os.listdir(os.path.join(root_dir, directory))
     if seeked_file in dir_content:
