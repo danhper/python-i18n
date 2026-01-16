@@ -6,13 +6,11 @@ import os
 import os.path
 import unittest
 
-from i18n import config, resource_loader, translations
-from i18n.translator import t
-
-
 # Python 3 only: always import reload from importlib
 from importlib import reload
 
+from i18n import config, resource_loader, translations
+from i18n.translator import t
 
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + "resources" + os.sep
 

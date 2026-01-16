@@ -7,15 +7,13 @@ import os.path
 import tempfile
 import unittest
 
+# Python 3 only: always import reload from importlib
+from importlib import reload
+
 from i18n import config, resource_loader, translations
 from i18n.config import json_available, yaml_available
 from i18n.resource_loader import I18nFileLoadError
 from i18n.translator import t
-
-
-# Python 3 only: always import reload from importlib
-from importlib import reload
-
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), "resources")
 
