@@ -1,11 +1,12 @@
 import os.path
 import sys
 
-from .loader import Loader, I18nFileLoadError
+from .loader import I18nFileLoadError, Loader
 
 
 class PythonLoader(Loader):
     """class to load python files"""
+
     def __init__(self):
         super(PythonLoader, self).__init__()
 

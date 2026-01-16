@@ -1,9 +1,11 @@
 import json
 
-from .loader import Loader, I18nFileLoadError
+from .loader import I18nFileLoadError, Loader
+
 
 class JsonLoader(Loader):
     """class to load yaml files"""
+
     def __init__(self):
         super(JsonLoader, self).__init__()
 
