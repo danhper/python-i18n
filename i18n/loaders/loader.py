@@ -39,7 +39,7 @@ class Loader(object):
     def parse_file(self, file_content):
         raise NotImplementedError(
             "the method parse_file has not been implemented for class {0}".format(
-                self.__class__.name__
+                self.__class__.__name__
             )
         )
 

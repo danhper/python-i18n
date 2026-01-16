@@ -9,13 +9,10 @@ import unittest
 from i18n import config, resource_loader, translations
 from i18n.translator import t
 
-try:
-    reload  # Python 2.7
-except NameError:
-    try:
-        from importlib import reload  # Python 3.4+
-    except ImportError:
-        from imp import reload  # type: ignore # Python 3.0 - 3.3
+
+# Python 3 only: always import reload from importlib
+from importlib import reload
+
 
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + "resources" + os.sep
 

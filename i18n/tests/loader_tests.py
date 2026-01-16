@@ -12,13 +12,9 @@ from i18n.config import json_available, yaml_available
 from i18n.resource_loader import I18nFileLoadError
 from i18n.translator import t
 
-try:
-    reload  # Python 2.7
-except NameError:
-    try:
-        from importlib import reload  # Python 3.4+
-    except ImportError:
-        from imp import reload  # type: ignore # Python 3.0 - 3.3
+
+# Python 3 only: always import reload from importlib
+from importlib import reload
 
 
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), "resources")
