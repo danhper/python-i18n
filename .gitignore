@@ -7,3 +7,6 @@ dist/
 .python-version
 .idea/
 .pytest_cache/
+*.lock
+.ruff_cache
+.venv

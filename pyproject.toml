@@ -29,5 +29,5 @@ classifiers = [
 yaml = ["pyyaml>=3.10"]
 
 [tool.setuptools.packages.find]
-where = ["i18n"]
+where = ["."]
 include = ["i18n*", "i18n.loaders*", "i18n.tests*"]
