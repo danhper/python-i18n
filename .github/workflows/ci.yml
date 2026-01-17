@@ -22,10 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .[yaml]
-          pip install ruff pyright
+          pip install ruff pyright pytest
       - name: Lint with ruff
-        run: ruff check i18n
+        run: ruff check .
       - name: Lint with pyright
         run: pyright .
       - name: Run tests
-        run: python -m i18n.tests.run_tests
+        run: pytest --maxfail=1 --disable-warnings --tb=short
