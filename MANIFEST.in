@@ -1,2 +1,9 @@
 include *.md
 include LICENSE
+include pyproject.toml
+include setup.py
+recursive-include requirements *.txt
+recursive-include i18n *.py
+recursive-include i18n *.json
+recursive-include i18n *.yml
+recursive-include i18n *.yaml

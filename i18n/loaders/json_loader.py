@@ -1,9 +1,11 @@
 import json
 
-from .loader import Loader, I18nFileLoadError
+from .loader import I18nFileLoadError, Loader
+
 
 class JsonLoader(Loader):
     """class to load yaml files"""
+
     def __init__(self):
         super(JsonLoader, self).__init__()
 
@@ -11,4 +13,4 @@ class JsonLoader(Loader):
         try:
             return json.loads(file_content)
         except ValueError as e:
-            raise I18nFileLoadError("invalid JSON: {0}".format(e.strerror))
+            raise I18nFileLoadError("invalid JSON: {0}".format(str(e)))

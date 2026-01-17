@@ -1,4 +1,1 @@
-settings = {
-    "foo": "bar",
-    "baz": "qux"
-}
+settings = {"foo": "bar", "baz": "qux"}
