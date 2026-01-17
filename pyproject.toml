@@ -31,4 +31,4 @@ yaml = ["pyyaml>=3.10"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["i18n*", "i18n.loaders*", "i18n.tests*"]
+include = ["i18n*", "i18n.loaders*", "test*"]
