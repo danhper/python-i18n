@@ -1,3 +1,17 @@
+"""
+loader_tests.py
+----------------
+本文件包含对 i18n.loaders 目录下各类资源加载器的单元测试。
+主要测试 JSON、YAML、Python 格式的配置和翻译文件的加载功能，
+确保各类 loader 能正确解析和返回预期的数据结构。
+
+测试覆盖点：
+- JSONLoader、YAMLLoader、PythonLoader 的基本功能
+- 各类配置文件的加载与异常处理
+- 边界情况与错误输入的健壮性
+
+依赖：pytest
+"""
 # -*- encoding: utf-8 -*-
 
 from __future__ import unicode_literals
@@ -6,6 +20,7 @@ import os
 import os.path
 import tempfile
 import unittest
+import pytest
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
@@ -18,8 +33,9 @@ from i18n.translator import t
 RESOURCE_FOLDER = os.path.join(os.path.dirname(__file__), "resources")
 
 
-class TestFileLoader(unittest.TestCase):
-    def setUp(self):
+class TestFileLoader:
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
         resource_loader.loaders = {}
         translations.container = {}
         reload(config)
@@ -28,45 +44,38 @@ class TestFileLoader(unittest.TestCase):
         config.set("encoding", "utf-8")
 
     def test_load_unavailable_extension(self):
-        with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
+        with pytest.raises(I18nFileLoadError) as excinfo:
             resource_loader.load_resource("foo.bar", "baz")
-            with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
-                resource_loader.load_resource("foo.bar", "baz")
+        assert "no loader" in str(excinfo.value)
 
     def test_register_wrong_loader(self):
         class WrongLoader(object):
             pass
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             resource_loader.register_loader(WrongLoader, [])
 
     def test_register_python_loader(self):
         resource_loader.init_python_loader()
-        with self.assertRaisesRegex(I18nFileLoadError, "error loading file .*"):
+        with pytest.raises(I18nFileLoadError) as excinfo:
             resource_loader.load_resource("foo.py", "bar")
-            with self.assertRaisesRegex(I18nFileLoadError, "error loading file .*"):
-                resource_loader.load_resource("foo.py", "bar")
+        assert "error loading file" in str(excinfo.value)
 
-    @unittest.skipUnless(yaml_available, "yaml library not available")
+    @pytest.mark.skipif(not yaml_available, reason="yaml library not available")
     def test_register_yaml_loader(self):
         resource_loader.init_yaml_loader()
-        with self.assertRaisesRegex(I18nFileLoadError, "error loading file .*"):
+        with pytest.raises(I18nFileLoadError) as excinfo:
             resource_loader.load_resource("foo.yml", "bar")
-            with self.assertRaisesRegex(I18nFileLoadError, "error loading file .*"):
-                resource_loader.load_resource("foo.yml", "bar")
+        assert "error loading file" in str(excinfo.value)
 
-    @unittest.skipUnless(json_available, "json library not available")
+    @pytest.mark.skipif(not json_available, reason="json library not available")
     def test_load_wrong_json_file(self):
         resource_loader.init_json_loader()
-        with self.assertRaisesRegex(I18nFileLoadError, "error getting data .*"):
+        with pytest.raises(I18nFileLoadError) as excinfo:
             resource_loader.load_resource(
                 os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.json"), "foo"
             )
-            with self.assertRaisesRegex(I18nFileLoadError, "error getting data .*"):
-                resource_loader.load_resource(
-                    os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.json"),
-                    "foo",
-                )
+        assert "error getting data" in str(excinfo.value)
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_yaml_file(self):
@@ -74,8 +83,8 @@ class TestFileLoader(unittest.TestCase):
         data = resource_loader.load_resource(
             os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.yml"), "settings"
         )
-        self.assertIn("foo", data)
-        self.assertEqual("bar", data["foo"])
+        assert "foo" in data
+        assert data["foo"] == "bar"
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_json_file(self):
@@ -83,16 +92,16 @@ class TestFileLoader(unittest.TestCase):
         data = resource_loader.load_resource(
             os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.json"), "settings"
         )
-        self.assertIn("foo", data)
-        self.assertEqual("bar", data["foo"])
+        assert "foo" in data
+        assert data["foo"] == "bar"
 
     def test_load_python_file(self):
         resource_loader.init_python_loader()
         data = resource_loader.load_resource(
             os.path.join(RESOURCE_FOLDER, "settings", "dummy_config.py"), "settings"
         )
-        self.assertIn("foo", data)
-        self.assertEqual("bar", data["foo"])
+        assert "foo" in data
+        assert data["foo"] == "bar"
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_memoization_with_file(self):
@@ -118,14 +127,14 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.init_yaml_loader()
         resource_loader.load_translation_file(memoization_file_name, tmp_dir_name)
         # try loading the value to make sure it's working
-        self.assertEqual(t("memoize.key"), "value")
+        assert t("memoize.key") == "value"
         # now delete the file and directory
         # we are running python2, delete manually
         import shutil
 
         shutil.rmtree(tmp_dir_name)
         # test the translation again to make sure it's loaded from memory
-        self.assertEqual(t("memoize.key"), "value")
+        assert t("memoize.key") == "value"
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
@@ -134,8 +143,8 @@ class TestFileLoader(unittest.TestCase):
         data = resource_loader.load_resource(
             os.path.join(RESOURCE_FOLDER, "settings", "eucjp_config.json"), "settings"
         )
-        self.assertIn("ほげ", data)
-        self.assertEqual("ホゲ", data["ほげ"])
+        assert "ほげ" in data
+        assert data["ほげ"] == "ホゲ"
 
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {
@@ -145,7 +154,7 @@ class TestFileLoader(unittest.TestCase):
         }
         for expected, test_val in tests.items():
             namespace = resource_loader.get_namespace_from_filepath(test_val)
-            self.assertEqual(expected, namespace)
+            assert expected == namespace
 
     def test_get_namespace_from_filepath_without_filename(self):
         tests = {
@@ -156,7 +165,7 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{locale}.{format}")
         for expected, test_val in tests.items():
             namespace = resource_loader.get_namespace_from_filepath(test_val)
-            self.assertEqual(expected, namespace)
+            assert expected == namespace
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
@@ -165,8 +174,8 @@ class TestFileLoader(unittest.TestCase):
             "foo.en.yml", os.path.join(RESOURCE_FOLDER, "translations")
         )
 
-        self.assertTrue(translations.has("foo.normal_key"))
-        self.assertTrue(translations.has("foo.parent.nested_key"))
+        assert translations.has("foo.normal_key")
+        assert translations.has("foo.parent.nested_key")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_plural(self):
@@ -174,19 +183,19 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.load_translation_file(
             "foo.en.yml", os.path.join(RESOURCE_FOLDER, "translations")
         )
-        self.assertTrue(translations.has("foo.mail_number"))
+        assert translations.has("foo.mail_number")
         translated_plural = translations.get("foo.mail_number")
-        self.assertIsInstance(translated_plural, dict)
-        self.assertEqual(translated_plural["zero"], "You do not have any mail.")
-        self.assertEqual(translated_plural["one"], "You have a new mail.")
-        self.assertEqual(translated_plural["many"], "You have %{count} new mails.")
+        assert isinstance(translated_plural, dict)
+        assert translated_plural["zero"] == "You do not have any mail."
+        assert translated_plural["one"] == "You have a new mail."
+        assert translated_plural["many"] == "You have %{count} new mails."
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_search_translation_yaml(self):
         resource_loader.init_yaml_loader()
         config.set("file_format", "yml")
         resource_loader.search_translation("foo.normal_key")
-        self.assertTrue(translations.has("foo.normal_key"))
+        assert translations.has("foo.normal_key")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_json(self):
@@ -194,7 +203,7 @@ class TestFileLoader(unittest.TestCase):
         config.set("file_format", "json")
 
         resource_loader.search_translation("bar.baz.qux")
-        self.assertTrue(translations.has("bar.baz.qux"))
+        assert translations.has("bar.baz.qux")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns(self):
@@ -202,7 +211,7 @@ class TestFileLoader(unittest.TestCase):
         config.set("file_format", "json")
         config.set("filename_format", "{locale}.{format}")
         resource_loader.search_translation("foo")
-        self.assertTrue(translations.has("foo"))
+        assert translations.has("foo")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale(
@@ -218,8 +227,8 @@ class TestFileLoader(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", ["en", "pl"])
         resource_loader.search_translation("COMMON.VERSION")
-        self.assertTrue(translations.has("COMMON.VERSION"))
-        self.assertEqual(translations.get("COMMON.VERSION"), "version")
+        assert translations.has("COMMON.VERSION")
+        assert translations.get("COMMON.VERSION") == "version"
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__two_levels_neting__other_locale(
@@ -235,8 +244,8 @@ class TestFileLoader(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", ["en", "pl"])
         resource_loader.search_translation("COMMON.VERSION", locale="pl")
-        self.assertTrue(translations.has("COMMON.VERSION", locale="pl"))
-        self.assertEqual(translations.get("COMMON.VERSION", locale="pl"), "wersja")
+        assert translations.has("COMMON.VERSION", locale="pl")
+        assert translations.get("COMMON.VERSION", locale="pl") == "wersja"
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__default_locale(self):
@@ -250,8 +259,8 @@ class TestFileLoader(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", "en")
         resource_loader.search_translation("TOP_MENU.TOP_BAR.LOGS")
-        self.assertTrue(translations.has("TOP_MENU.TOP_BAR.LOGS"))
-        self.assertEqual(translations.get("TOP_MENU.TOP_BAR.LOGS"), "Logs")
+        assert translations.has("TOP_MENU.TOP_BAR.LOGS")
+        assert translations.get("TOP_MENU.TOP_BAR.LOGS") == "Logs"
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__other_locale(self):
@@ -265,9 +274,5 @@ class TestFileLoader(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", "en")
         resource_loader.search_translation("TOP_MENU.TOP_BAR.LOGS", locale="pl")
-        self.assertTrue(translations.has("TOP_MENU.TOP_BAR.LOGS", locale="pl"))
-        self.assertEqual(translations.get("TOP_MENU.TOP_BAR.LOGS", locale="pl"), "Logi")
-
-
-suite = unittest.TestLoader().loadTestsFromTestCase(TestFileLoader)
-unittest.TextTestRunner(verbosity=2).run(suite)
+        assert translations.has("TOP_MENU.TOP_BAR.LOGS", locale="pl")
+        assert translations.get("TOP_MENU.TOP_BAR.LOGS", locale="pl") == "Logi"

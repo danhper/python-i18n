@@ -1,1 +1,1 @@
-from . import translation_tests
+from . import translation_tests  # noqa: F401

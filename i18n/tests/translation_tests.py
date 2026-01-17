@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import os
 import os.path
-import unittest
+import pytest
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
@@ -15,9 +15,9 @@ from i18n.translator import t
 RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + "resources" + os.sep
 
 
-class TestTranslationFormat(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+class TestTranslationFormat:
+    @pytest.fixture(scope="class", autouse=True)
+    def setup_class(cls):
         resource_loader.init_loaders()
         reload(config)
         config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations")])
@@ -37,66 +37,70 @@ class TestTranslationFormat(unittest.TestCase):
         )
         translations.add("foo.bad_plural", {"bar": "foo elems"})
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
         config.set("error_on_missing_translation", False)
         config.set("error_on_missing_placeholder", False)
         config.set("fallback", "en")
         config.set("locale", "en")
+        translations.add("foo.hi", "Hello %{name} !")
 
     def test_basic_translation(self):
-        self.assertEqual(t("foo.normal_key"), "normal_value")
+        assert t("foo.normal_key") == "normal_value"
 
     def test_missing_translation(self):
-        self.assertEqual(t("foo.inexistent"), "foo.inexistent")
+        assert t("foo.inexistent") == "foo.inexistent"
 
     def test_missing_translation_error(self):
         config.set("error_on_missing_translation", True)
-        with self.assertRaises(KeyError):
+        import pytest
+
+        with pytest.raises(KeyError):
             t("foo.inexistent")
 
     def test_locale_change(self):
         config.set("locale", "fr")
-        self.assertEqual(t("foo.hello", name="Bob"), "Salut Bob !")
+        assert t("foo.hello", name="Bob") == "Salut Bob !"
 
     def test_fallback(self):
         config.set("fallback", "fr")
-        self.assertEqual(t("foo.hello", name="Bob"), "Salut Bob !")
+        assert t("foo.hello", name="Bob") == "Salut Bob !"
 
     def test_fallback_from_resource(self):
         config.set("fallback", "ja")
-        self.assertEqual(t("foo.fallback_key"), "フォールバック")
+        assert t("foo.fallback_key") == "フォールバック"
 
     def test_basic_placeholder(self):
-        self.assertEqual(t("foo.hi", name="Bob"), "Hello Bob !")
+        assert t("foo.hi", name="Bob") == "Hello Bob !"
 
     def test_missing_placehoder(self):
-        self.assertEqual(t("foo.hi"), "Hello %{name} !")
+        assert t("foo.hi") == "Hello %{name} !"
 
     def test_missing_placeholder_error(self):
         config.set("error_on_missing_placeholder", True)
-        with self.assertRaises(KeyError):
+        with pytest.raises(KeyError):
             t("foo.hi")
 
     def test_basic_pluralization(self):
-        self.assertEqual(t("foo.basic_plural", count=0), "0 elems")
-        self.assertEqual(t("foo.basic_plural", count=1), "1 elem")
-        self.assertEqual(t("foo.basic_plural", count=2), "2 elems")
+        assert t("foo.basic_plural", count=0) == "0 elems"
+        assert t("foo.basic_plural", count=1) == "1 elem"
+        assert t("foo.basic_plural", count=2) == "2 elems"
 
     def test_full_pluralization(self):
-        self.assertEqual(t("foo.plural", count=0), "no mail")
-        self.assertEqual(t("foo.plural", count=1), "1 mail")
-        self.assertEqual(t("foo.plural", count=4), "only 4 mails")
-        self.assertEqual(t("foo.plural", count=12), "12 mails")
+        assert t("foo.plural", count=0) == "no mail"
+        assert t("foo.plural", count=1) == "1 mail"
+        assert t("foo.plural", count=4) == "only 4 mails"
+        assert t("foo.plural", count=12) == "12 mails"
 
     def test_bad_pluralization(self):
         config.set("error_on_missing_plural", False)
-        self.assertEqual(t("foo.normal_key", count=5), "normal_value")
+        assert t("foo.normal_key", count=5) == "normal_value"
         config.set("error_on_missing_plural", True)
-        with self.assertRaises(KeyError):
+        with pytest.raises(KeyError):
             t("foo.bad_plural", count=0)
 
     def test_default(self):
-        self.assertEqual(t("inexistent_key", default="foo"), "foo")
+        assert t("inexistent_key", default="foo") == "foo"
 
     def test_skip_locale_root_data(self):
         config.set("filename_format", "{locale}.{format}")
@@ -104,7 +108,7 @@ class TestTranslationFormat(unittest.TestCase):
         config.set("locale", "gb")
         config.set("skip_locale_root_data", True)
         resource_loader.init_loaders()
-        self.assertEqual(t("foo"), "Lorry")
+        assert t("foo") == "Lorry"
         config.set("skip_locale_root_data", False)
 
     def test_skip_locale_root_data_nested_json_dict__default_locale(self):
@@ -117,7 +121,7 @@ class TestTranslationFormat(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", "en")
         resource_loader.init_json_loader()
-        self.assertEqual(t("COMMON.START"), "Start")
+        assert t("COMMON.START") == "Start"
 
     def test_skip_locale_root_data_nested_json_dict__other_locale(self):
         config.set("file_format", "json")
@@ -129,4 +133,4 @@ class TestTranslationFormat(unittest.TestCase):
         config.set("skip_locale_root_data", True)
         config.set("locale", "en")
         resource_loader.init_json_loader()
-        self.assertEqual(t("COMMON.EXECUTE", locale="pl"), "Wykonaj")
+        assert t("COMMON.EXECUTE", locale="pl") == "Wykonaj"

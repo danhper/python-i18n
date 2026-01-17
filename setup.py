@@ -14,7 +14,7 @@ setup(
     packages=["i18n", "i18n.loaders", "i18n.tests"],
     include_package_data=True,
     zip_safe=True,
-    test_suite="i18n.tests",
+    # test_suite removed for pytest migration
     extras_require={
         "YAML": ["pyyaml>=3.10"],
     },

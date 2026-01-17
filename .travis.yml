@@ -8,7 +8,7 @@ python:
 install: "pip install -r requirements.txt"
 # command to run tests
 script:
-  - python setup.py test
-  - coverage run --source=i18n setup.py test
+  - pytest --maxfail=1 --disable-warnings --tb=short
+  - coverage run -m pytest
 after_success:
   - coveralls
