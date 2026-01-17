@@ -1,5 +1,4 @@
-# python-i18n [![Build Status](https://travis-ci.org/danhper/python-i18n.png?branch=master)](https://travis-ci.org/danhper/python-i18n) [![Coverage Status](https://coveralls.io/repos/github/danhper/python-i18n/badge.svg?branch=master)](https://coveralls.io/github/danhper/python-i18n?branch=master) [![Code Climate](https://codeclimate.com/github/danhper/python-i18n/badges/gpa.svg)](https://codeclimate.com/github/danhper/python-i18n)
-
+# python-i18n [![Build Status](https://github.com/danhper/python-i18n/actions/workflows/ci.yml/badge.svg)](https://github.com/danhper/python-i18n/actions/workflows/ci.yml) [![Coverage Status](https://coveralls.io/repos/github/danhper/python-i18n/badge.svg?branch=master)](https://coveralls.io/github/danhper/python-i18n?branch=master) [![Code Climate](https://codeclimate.com/github/danhper/python-i18n/badges/gpa.svg)](https://codeclimate.com/github/danhper/python-i18n)
 
 This library provides i18n functionality for Python 3 out of the box. The usage is mostly based on Rails i18n library.
 
@@ -14,6 +13,7 @@ If you want to use YAML to store your translations, use
     pip install python-i18n[YAML]
 
 ## Usage
+
 ### Basic usage
 
 The simplest, though not very useful usage would be
@@ -45,20 +45,24 @@ are loaded and then store their content in memory. On the next use the file cont
 loaded from disk, preventing disk access. While this can be useful in some contexts, keep in mind there is no current way of
 issuing a command to the reloader to re-read the files from disk, so if you are updating your translation file without restarting
 the interpreter do not use this option.
- 
+
 ### Namespaces
 
 #### File namespaces
+
 In the above example, the translation key is `foo.hi` and not just `hi`. This is because the translation filename format is by default `{namespace}.{locale}.{format}`, so the {namespace} part of the file is used as translation.
 
 To remove `{namespace}` from filename format please change the `filename_format` configuration.
 
     i18n.set('filename_format', '{locale}.{format}')
-            
+
+
 #### Directory namespaces
+
 If your files are in subfolders, the foldernames are also used as namespaces, so for example if your translation root path is `/path/to/translations` and you have the file `/path/to/translations/my/app/name/foo.en.yml`, the translation namespace for the file will be `my.app.name` and the file keys will therefore be accessible from `my.app.name.foo.my_key`.
 
 ## Functionalities
+
 ### Placeholder
 
 You can of course use placeholders in your translations. With the default configuration, the placeholders are used by inserting `%{placeholder_name}` in the ntranslation string. Here is a sample usage.
@@ -89,8 +93,9 @@ You can set a fallback which will be used when the key is not found in the defau
     i18n.set('fallback', 'en')
     i18n.add_translation('foo', 'bar', locale='en')
     i18n.t('foo') # bar
-    
+
 ### Skip locale from root
+
 Sometimes i18n structure file came from another project or not contains root element with locale eg. `en` name.
 
     {
@@ -101,5 +106,3 @@ However we would like to use this i18n .json file in our Python sub-project or m
 `python-i18n` has special configuration tha is skipping locale eg. `en` root data element from the file.
 
     i18n.set('skip_locale_root_data', True)
-
-
