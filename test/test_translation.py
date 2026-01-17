@@ -6,7 +6,6 @@ import os
 import os.path
 import pytest
 
-# Python 3 only: always import reload from importlib
 from importlib import reload
 
 from i18n import config, resource_loader, translations

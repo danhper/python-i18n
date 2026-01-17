@@ -1,17 +1,3 @@
-"""
-loader_tests.py
-----------------
-本文件包含对 i18n.loaders 目录下各类资源加载器的单元测试。
-主要测试 JSON、YAML、Python 格式的配置和翻译文件的加载功能，
-确保各类 loader 能正确解析和返回预期的数据结构。
-
-测试覆盖点：
-- JSONLoader、YAMLLoader、PythonLoader 的基本功能
-- 各类配置文件的加载与异常处理
-- 边界情况与错误输入的健壮性
-
-依赖：pytest
-"""
 # -*- encoding: utf-8 -*-
 
 from __future__ import unicode_literals
@@ -22,7 +8,6 @@ import tempfile
 import unittest
 import pytest
 
-# Python 3 only: always import reload from importlib
 from importlib import reload
 
 from i18n import config, resource_loader, translations
@@ -126,14 +111,10 @@ class TestFileLoader:
         # create the loader and pass the file to it
         resource_loader.init_yaml_loader()
         resource_loader.load_translation_file(memoization_file_name, tmp_dir_name)
-        # try loading the value to make sure it's working
         assert t("memoize.key") == "value"
-        # now delete the file and directory
-        # we are running python2, delete manually
         import shutil
 
         shutil.rmtree(tmp_dir_name)
-        # test the translation again to make sure it's loaded from memory
         assert t("memoize.key") == "value"
 
     @unittest.skipUnless(json_available, "json library not available")
