@@ -2,6 +2,9 @@
 
 This library provides i18n functionality for Python 3 out of the box. The usage is mostly based on Rails i18n library.
 
+> [!WARNING]
+> This project is outdated and urgently needs modernization due to lack of maintenance.
+
 ## Installation
 
 Just run
