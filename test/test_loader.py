@@ -30,15 +30,12 @@ def global_setup():
 
 @pytest.fixture(autouse=True)
 def reset_state():
-    # 保存当前配置
     old_loaders = dict(resource_loader.loaders)
     old_container = dict(translations.container)
     old_config = dict(config.__dict__)
     yield
-    # 恢复配置
     resource_loader.loaders = old_loaders
     translations.container = old_container
-    # 只恢复 config 的用户设置部分，避免破坏模块属性
     for k in list(config.__dict__.keys()):
         if k not in old_config:
             del config.__dict__[k]

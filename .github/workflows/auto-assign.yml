@@ -12,6 +12,6 @@ permissions:
 
 jobs:
     assign-author:
-        runs-on: ubuntu-slim
+        runs-on: ubuntu-latest
         steps:
             - uses: toshimaru/auto-author-assign@v3.0.1

@@ -1,5 +1,3 @@
-# -*- encoding: utf-8 -*-
-# type: ignore
 from __future__ import unicode_literals
 
 import os
