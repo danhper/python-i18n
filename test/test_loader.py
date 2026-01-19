@@ -212,9 +212,10 @@ def test_search_translation_json():
     config.set("locale", "en")
     resource_loader.init_json_loader()
     config.set("file_format", "json")
+    config.set("filename_format", "{namespace}.{locale}.{format}")
 
     resource_loader.search_translation("bar.baz.qux")
-    assert translations.has("foo")
+    assert translations.has("bar.baz.qux")
 
 
 @pytest.mark.skipif(not json_available, reason="json library not available")
