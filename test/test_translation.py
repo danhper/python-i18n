@@ -69,7 +69,7 @@ class TestTranslationFormat:
     def test_basic_placeholder(self):
         assert t("foo.hi", name="Bob") == "Hello Bob !"
 
-    def test_missing_placehoder(self):
+    def test_missing_placeholder(self):
         assert t("foo.hi") == "Hello %{name} !"
 
     def test_missing_placeholder_error(self):

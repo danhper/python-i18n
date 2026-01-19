@@ -1,20 +1,17 @@
 name: Auto Assign
+
 on:
     issues:
-        types: [opened]
-    pull_request:
-        types: [opened]
+        types: [opened, reopened]
+    pull_request_target:
+        types: [opened, reopened]
+
+permissions:
+    issues: write
+    pull-requests: write
+
 jobs:
-    run:
-        runs-on: ubuntu-latest
-        permissions:
-            issues: write
-            pull-requests: write
+    assign-author:
+        runs-on: ubuntu-slim
         steps:
-            - name: "Auto-assign issue"
-              uses: pozil/auto-assign-issue@v1
-              with:
-                  repo-token: ${{ secrets.GITHUB_TOKEN }}
-                  # Override with repository variable AUTO_ASSIGN_ASSIGNEES (comma-separated usernames). Defaults to 'xinvxueyuan'.
-                  assignees: ${{ vars.AUTO_ASSIGN_ASSIGNEES || 'xinvxueyuan' }}
-                  numOfAssignee: 1
+            - uses: toshimaru/auto-author-assign@v3.0.1
