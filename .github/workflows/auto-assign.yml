@@ -15,5 +15,6 @@ jobs:
               uses: pozil/auto-assign-issue@v1
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
-                  assignees: xinvxueyuan
+                  # Override with repository variable AUTO_ASSIGN_ASSIGNEES (comma-separated usernames). Defaults to 'xinvxueyuan'.
+                  assignees: ${{ vars.AUTO_ASSIGN_ASSIGNEES || 'xinvxueyuan' }}
                   numOfAssignee: 1
