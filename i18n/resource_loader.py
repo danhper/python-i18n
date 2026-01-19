@@ -65,12 +65,14 @@ def get_namespace_from_filepath(filename):
     )
     if "{namespace}" in config.get("filename_format"):
         try:
+            format_parts = config.get("filename_format").split(".")
+            namespace_index = format_parts.index("{namespace}")
             splitted_filename = os.path.basename(filename).split(".")
+            if namespace_index >= len(splitted_filename):
+                raise I18nFileLoadError("incorrect file format.")
             if namespace:
                 namespace += config.get("namespace_delimiter")
-            namespace += splitted_filename[
-                config.get("filename_format").index("{namespace}")
-            ]
+            namespace += splitted_filename[namespace_index]
         except ValueError:
             raise I18nFileLoadError("incorrect file format.")
     return namespace

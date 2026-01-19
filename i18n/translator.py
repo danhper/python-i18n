@@ -1,19 +1,27 @@
-from string import Template
+import re
 
 from . import config, resource_loader, translations
 
 
-class TranslationFormatter(Template):
-    delimiter = config.get("placeholder_delimiter")
-
+class TranslationFormatter(object):
     def __init__(self, template):
-        super(TranslationFormatter, self).__init__(template)
+        self.template = template
 
     def format(self, **kwargs):
-        if config.get("error_on_missing_placeholder"):
-            return self.substitute(**kwargs)
-        else:
-            return self.safe_substitute(**kwargs)
+        delimiter = config.get("placeholder_delimiter")
+        pattern = re.compile(
+            r"{0}\{{([_a-zA-Z][_a-zA-Z0-9]*)\}}".format(re.escape(delimiter))
+        )
+
+        def replace(match):
+            key = match.group(1)
+            if key in kwargs:
+                return str(kwargs[key])
+            if config.get("error_on_missing_placeholder"):
+                raise KeyError(key)
+            return match.group(0)
+
+        return pattern.sub(replace, self.template)
 
 
 def t(key, **kwargs):

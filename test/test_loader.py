@@ -229,7 +229,7 @@ def test_search_translation_without_ns():
 
 
 @pytest.mark.skipif(not json_available, reason="json library not available")
-def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale():
+def test_search_translation_without_ns_nested_dict__two_levels_nesting__default_locale():
     resource_loader.init_json_loader()
     config.set("file_format", "json")
     config.set(
@@ -245,7 +245,7 @@ def test_search_translation_without_ns_nested_dict__two_levels_neting__default_l
 
 
 @pytest.mark.skipif(not json_available, reason="json library not available")
-def test_search_translation_without_ns_nested_dict__two_levels_neting__other_locale():
+def test_search_translation_without_ns_nested_dict__two_levels_nesting__other_locale():
     config.set("encoding", "utf-8")
     resource_loader.init_json_loader()
     config.set("file_format", "json")
