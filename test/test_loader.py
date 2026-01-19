@@ -28,6 +28,24 @@ def global_setup():
     config.set("encoding", "utf-8")
 
 
+@pytest.fixture(autouse=True)
+def reset_state():
+    # 保存当前配置
+    old_loaders = dict(resource_loader.loaders)
+    old_container = dict(translations.container)
+    old_config = dict(config.__dict__)
+    yield
+    # 恢复配置
+    resource_loader.loaders = old_loaders
+    translations.container = old_container
+    # 只恢复 config 的用户设置部分，避免破坏模块属性
+    for k in list(config.__dict__.keys()):
+        if k not in old_config:
+            del config.__dict__[k]
+    for k, v in old_config.items():
+        config.__dict__[k] = v
+
+
 def test_load_unavailable_extension():
     with pytest.raises(I18nFileLoadError) as excinfo:
         resource_loader.load_resource("foo.bar", "baz")
@@ -98,22 +116,14 @@ def test_load_python_file():
 
 @pytest.mark.skipif(not yaml_available, reason="yaml library not available")
 def test_memoization_with_file():
-    """This test creates a temporary file with the help of the
-    tempfile library and writes a simple key: value dictionary in it.
-    It will then use that file to load the translations and, after having
-    enabled memoization, try to access it, causing the file to be (hopefully)
-    memoized. It will then _remove_ the temporary file and try to access again,
-    asserting that an error is not raised, thus making sure the data is
-    actually loaded from memory and not from disk access."""
     memoization_file_name = "memoize.en.yml"
     try:
         d = tempfile.TemporaryDirectory()
         tmp_dir_name = d.name
     except AttributeError:
         tmp_dir_name = tempfile.mkdtemp()
-    fd = open("{}/{}".format(tmp_dir_name, memoization_file_name), "w")
-    fd.write("en:\n  key: value")
-    fd.close()
+    with open("{}/{}".format(tmp_dir_name, memoization_file_name), "w") as fd:
+        fd.write("en:\n  key: value")
     resource_loader.init_yaml_loader()
     resource_loader.load_translation_file(memoization_file_name, tmp_dir_name)
     assert t("memoize.key") == "value"
@@ -192,7 +202,10 @@ def test_search_translation_yaml():
     config.set("locale", "en")
     resource_loader.init_yaml_loader()
     config.set("file_format", "yml")
-    resource_loader.search_translation("foo.normal_key")
+    translations.container.clear()
+    resource_loader.load_translation_file(
+        "foo.en.yml", os.path.join(RESOURCE_FOLDER, "translations")
+    )
     assert translations.has("normal_key")
 
 
