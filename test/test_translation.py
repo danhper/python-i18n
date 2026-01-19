@@ -16,11 +16,10 @@ RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + "resources" + os.sep
 
 class TestTranslationFormat:
     @pytest.fixture(scope="class", autouse=True)
-    def setup_class(cls):
+    def setup_class(self):
         resource_loader.init_loaders()
         reload(config)
         config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations")])
-        translations.add("foo.hi", "Hello %{name} !")
         translations.add("foo.hello", "Salut %{name} !", locale="fr")
         translations.add(
             "foo.basic_plural", {"one": "1 elem", "many": "%{count} elems"}
@@ -52,8 +51,6 @@ class TestTranslationFormat:
 
     def test_missing_translation_error(self):
         config.set("error_on_missing_translation", True)
-        import pytest
-
         with pytest.raises(KeyError):
             t("foo.inexistent")
 

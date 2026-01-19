@@ -85,13 +85,26 @@ def load_translation_file(filename, base_directory, locale=config.get("locale"))
 
 
 def load_translation_dic(dic, namespace, locale):
-    if namespace:
-        namespace += config.get("namespace_delimiter")
+    # 兼容顶层为 locale 的结构
+    # 兼容顶层为 locale 的结构
+    if isinstance(dic, dict) and len(dic) == 1 and locale in dic:
+        dic = dic[locale]
+    # 避免 namespace 重复叠加
+    delimiter = config.get("namespace_delimiter")
+
+    def join_ns(ns, k):
+        if not ns:
+            return k
+        # 如果 ns 已以 k 结尾，避免重复
+        if ns.endswith(delimiter + k) or ns == k:
+            return ns
+        return ns + delimiter + k
+
     for key, value in dic.items():
         if isinstance(value, dict) and len(set(PLURALS).intersection(value)) < 2:
-            load_translation_dic(value, namespace + key, locale)
+            load_translation_dic(value, join_ns(namespace, key), locale)
         else:
-            translations.add(namespace + key, value, locale)
+            translations.add(join_ns(namespace, key), value, locale)
 
 
 def load_directory(directory, locale=config.get("locale")):
