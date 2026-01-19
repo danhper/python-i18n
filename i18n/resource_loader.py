@@ -86,7 +86,7 @@ def load_translation_file(filename, base_directory, locale=config.get("locale"))
 
 def load_translation_dic(dic, namespace, locale):
     # 兼容顶层为 locale 的结构
-    # 兼容顶层为 locale 的结构
+
     if isinstance(dic, dict) and len(dic) == 1 and locale in dic:
         dic = dic[locale]
     # 避免 namespace 重复叠加
