@@ -11,7 +11,7 @@ setup(
     url="https://github.com/tuvistavie/python-i18n",
     download_url="https://github.com/tuvistavie/python-i18n/archive/master.zip",
     license="MIT",
-    packages=["i18n", "i18n.loaders", "i18n.tests"],
+    packages=["i18n", "i18n.loaders"],
     include_package_data=True,
     zip_safe=True,
     extras_require={

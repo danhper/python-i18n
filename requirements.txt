@@ -1,2 +1,3 @@
 pyyaml>=3.10
 coveralls
+pytest>=7.4.4
