@@ -1,3 +1,4 @@
+from functools import lru_cache
 from string import Template
 
 from . import config, resource_loader, translations
@@ -14,6 +15,16 @@ class TranslationFormatter(Template):
             return self.substitute(**kwargs)
         else:
             return self.safe_substitute(**kwargs)
+
+
+@lru_cache(maxsize=16)
+def _formatter_for_delimiter(delimiter):
+    # Template compiles its delimiter into a pattern when a subclass is created.
+    return type(
+        "ConfiguredTranslationFormatter",
+        (TranslationFormatter,),
+        {"delimiter": delimiter},
+    )
 
 
 def t(key, **kwargs):
@@ -39,7 +50,8 @@ def translate(key, **kwargs):
     translation = translations.get(key, locale=locale)
     if "count" in kwargs:
         translation = pluralize(key, translation, kwargs["count"])
-    return TranslationFormatter(translation).format(**kwargs)
+    formatter = _formatter_for_delimiter(config.get("placeholder_delimiter"))
+    return formatter(translation).format(**kwargs)
 
 
 def pluralize(key, translation, count):
