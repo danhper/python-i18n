@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Python 3.8 and 3.9 builds are available for Ubuntu 24.04.
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
@@ -22,7 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .[yaml]
-          pip install ruff pyright
+          pip install ruff==0.14.1 pyright
       - name: Lint with ruff
         run: ruff check i18n
       - name: Lint with pyright
