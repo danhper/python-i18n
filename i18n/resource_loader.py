@@ -76,7 +76,9 @@ def get_namespace_from_filepath(filename):
     return namespace
 
 
-def load_translation_file(filename, base_directory, locale=config.get("locale")):
+def load_translation_file(filename, base_directory, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     skip_locale_root_data = config.get("skip_locale_root_data")
     root_data = None if skip_locale_root_data else locale
     translations_dic = load_resource(os.path.join(base_directory, filename), root_data)
@@ -94,7 +96,9 @@ def load_translation_dic(dic, namespace, locale):
             translations.add(namespace + key, value, locale)
 
 
-def load_directory(directory, locale=config.get("locale")):
+def load_directory(directory, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     for f in os.listdir(directory):
         path = os.path.join(directory, f)
         if os.path.isfile(path) and path.endswith(config.get("file_format")):
@@ -103,7 +107,9 @@ def load_directory(directory, locale=config.get("locale")):
             load_translation_file(f, directory, locale)
 
 
-def search_translation(key, locale=config.get("locale")):
+def search_translation(key, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     splitted_key = key.split(config.get("namespace_delimiter"))
     if not splitted_key:
         return
@@ -116,9 +122,9 @@ def search_translation(key, locale=config.get("locale")):
             recursive_search_dir(namespace, "", directory, locale)
 
 
-def recursive_search_dir(
-    splitted_namespace, directory, root_dir, locale=config.get("locale")
-):
+def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     if not splitted_namespace:
         return
     seeked_file = config.get("filename_format").format(
