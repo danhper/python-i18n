@@ -77,6 +77,33 @@ class TestTranslationFormat(unittest.TestCase):
         with self.assertRaises(KeyError):
             t("foo.hi")
 
+    def test_configured_placeholder_delimiter(self):
+        self.addCleanup(config.set, "placeholder_delimiter", "%")
+        for delimiter in ("#", "$", ".", "@@", "%"):
+            with self.subTest(delimiter=delimiter):
+                config.set("placeholder_delimiter", delimiter)
+                translations.add("custom", "Hello " + delimiter + "{name} !")
+                self.assertEqual(t("custom", name="Bob"), "Hello Bob !")
+
+    def test_configured_delimiter_preserves_literal_percent(self):
+        self.addCleanup(config.set, "placeholder_delimiter", "%")
+        config.set("placeholder_delimiter", "#")
+        config.set("error_on_missing_placeholder", True)
+        translations.add("custom", "10 % and #{name}, ##")
+        self.assertEqual(t("custom", name="Bob"), "10 % and Bob, #")
+
+    def test_configured_delimiter_missing_and_invalid_placeholders(self):
+        self.addCleanup(config.set, "placeholder_delimiter", "%")
+        config.set("placeholder_delimiter", "#")
+        translations.add("custom", "Hello #{name}")
+        self.assertEqual(t("custom"), "Hello #{name}")
+        config.set("error_on_missing_placeholder", True)
+        with self.assertRaises(KeyError):
+            t("custom")
+        translations.add("custom", "10 # !")
+        with self.assertRaises(ValueError):
+            t("custom")
+
     def test_basic_pluralization(self):
         self.assertEqual(t("foo.basic_plural", count=0), "0 elems")
         self.assertEqual(t("foo.basic_plural", count=1), "1 elem")
