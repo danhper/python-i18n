@@ -1,4 +1,5 @@
 import os.path
+import sys
 
 from . import config, translations
 from .loaders.loader import I18nFileLoadError
@@ -121,9 +122,9 @@ def search_translation(key, locale=config.get("locale")):
 
 def search_package(package, namespace, locale):
     # Import lazily so filesystem-only users do not need the backport.
-    try:
+    if sys.version_info >= (3, 9):
         from importlib.resources import files
-    except ImportError:
+    else:
         from importlib_resources import files
 
     if config.get("file_format") == "py":
