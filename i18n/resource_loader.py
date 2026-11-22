@@ -1,4 +1,5 @@
 import os.path
+import re
 
 from . import config, translations
 from .loaders.loader import I18nFileLoadError
@@ -95,10 +96,19 @@ def load_translation_dic(dic, namespace, locale):
 
 
 def load_directory(directory, locale=config.get("locale")):
+    filename_format = config.get("filename_format")
+    filename_pattern = None
+    if "{locale}" in filename_format:
+        filename_pattern = (
+            re.escape(filename_format)
+            .replace(r"\{locale\}", re.escape(locale))
+            .replace(r"\{format\}", re.escape(config.get("file_format")))
+            .replace(r"\{namespace\}", ".+")
+        )
     for f in os.listdir(directory):
         path = os.path.join(directory, f)
         if os.path.isfile(path) and path.endswith(config.get("file_format")):
-            if "{locale}" in config.get("filename_format") and locale not in f:
+            if filename_pattern is not None and re.fullmatch(filename_pattern, f) is None:
                 continue
             load_translation_file(f, directory, locale)
 

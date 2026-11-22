@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import json
 import os
 import os.path
 import tempfile
@@ -203,6 +204,46 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{locale}.{format}")
         resource_loader.search_translation("foo")
         self.assertTrue(translations.has("foo"))
+
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_load_directory_does_not_match_locale_in_extension(self):
+        resource_loader.init_yaml_loader()
+        config.set("file_format", "yaml")
+        config.set("filename_format", "{locale}.{format}")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(os.path.join(directory, "de.yaml"), "w") as stream:
+                stream.write("de:\n  greeting: Hallo\n")
+            for locale in ("am", "ml"):
+                with self.subTest(locale=locale):
+                    resource_loader.load_directory(directory, locale)
+                    self.assertFalse(translations.has("greeting", locale))
+
+    def test_load_directory_matches_complete_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        for filename_format in ("{locale}.{format}", "english-{locale}.{format}"):
+            with self.subTest(filename_format=filename_format):
+                config.set("filename_format", filename_format)
+                with tempfile.TemporaryDirectory() as directory:
+                    for locale in ("zh-tw", "zh", "en", "de"):
+                        filename = filename_format.format(locale=locale, format="json")
+                        with open(os.path.join(directory, filename), "w") as stream:
+                            json.dump({locale: {"greeting": locale}}, stream)
+                    for locale in ("zh", "en"):
+                        resource_loader.load_directory(directory, locale)
+                        self.assertEqual(translations.get("greeting", locale), locale)
+
+    def test_load_directory_keeps_filename_namespaces(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with tempfile.TemporaryDirectory() as directory:
+            for namespace, locale in (("foo", "en"), ("bar", "en"), ("english", "de")):
+                filename = "{}.{}.json".format(namespace, locale)
+                with open(os.path.join(directory, filename), "w") as stream:
+                    json.dump({locale: {"greeting": namespace}}, stream)
+            resource_loader.load_directory(directory, "en")
+            self.assertEqual(translations.get("foo.greeting", "en"), "foo")
+            self.assertEqual(translations.get("bar.greeting", "en"), "bar")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale(
