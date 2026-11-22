@@ -17,7 +17,8 @@ def register_loader(loader_class, supported_extensions):
 
 
 def load_resource(filename, root_data):
-    extension = os.path.splitext(filename)[1][1:]
+    resource_name = filename.name if hasattr(filename, "read_text") else filename
+    extension = os.path.splitext(resource_name)[1][1:]
     if extension not in loaders:
         raise I18nFileLoadError(
             "no loader available for extension {0}".format(extension)
@@ -114,6 +115,40 @@ def search_translation(key, locale=config.get("locale")):
     else:
         for directory in config.get("load_path"):
             recursive_search_dir(namespace, "", directory, locale)
+    for package in config.get("load_package_path"):
+        search_package(package, namespace, locale)
+
+
+def search_package(package, namespace, locale):
+    # Import lazily so filesystem-only users do not need the backport.
+    try:
+        from importlib.resources import files
+    except ImportError:
+        from importlib_resources import files
+
+    if config.get("file_format") == "py":
+        raise I18nFileLoadError("package resources require a text-based loader")
+    root = files(package)
+    filename_format = config.get("filename_format")
+    if not namespace and "{namespace}" in filename_format:
+        return
+    directories = []
+    for part in namespace or [""]:
+        filename = filename_format.format(
+            namespace=part, format=config.get("file_format"), locale=locale
+        )
+        resource = root.joinpath(filename)
+        if resource.is_file():
+            root_data = None if config.get("skip_locale_root_data") else locale
+            data = load_resource(resource, root_data)
+            relative_name = os.path.join(*(directories + [filename]))
+            load_translation_dic(data, get_namespace_from_filepath(relative_name), locale)
+            return
+        subdirectory = root.joinpath(part)
+        if not subdirectory.is_dir():
+            return
+        directories.append(part)
+        root = subdirectory
 
 
 def recursive_search_dir(
