@@ -16,10 +16,14 @@ RESOURCE_FOLDER = os.path.dirname(__file__) + os.sep + "resources" + os.sep
 
 
 class TestTranslationFormat(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        resource_loader.init_loaders()
+    def setUp(self):
+        self.addCleanup(setattr, config, "settings", config.settings)
+        self.addCleanup(setattr, resource_loader, "loaders", resource_loader.loaders)
+        self.addCleanup(setattr, translations, "container", translations.container)
         reload(config)
+        resource_loader.loaders = {}
+        translations.container = {}
+        resource_loader.init_loaders()
         config.set("load_path", [os.path.join(RESOURCE_FOLDER, "translations")])
         translations.add("foo.hi", "Hello %{name} !")
         translations.add("foo.hello", "Salut %{name} !", locale="fr")
@@ -36,12 +40,6 @@ class TestTranslationFormat(unittest.TestCase):
             },
         )
         translations.add("foo.bad_plural", {"bar": "foo elems"})
-
-    def setUp(self):
-        config.set("error_on_missing_translation", False)
-        config.set("error_on_missing_placeholder", False)
-        config.set("fallback", "en")
-        config.set("locale", "en")
 
     def test_basic_translation(self):
         self.assertEqual(t("foo.normal_key"), "normal_value")
