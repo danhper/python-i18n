@@ -159,6 +159,40 @@ class TestFileLoader(unittest.TestCase):
             namespace = resource_loader.get_namespace_from_filepath(test_val)
             self.assertEqual(expected, namespace)
 
+    def test_namespace_after_other_filename_fields(self):
+        for filename_format, filename in (
+            ("{locale}.{namespace}.{format}", "ja.foo.yml"),
+            ("translations.{namespace}.{locale}.{format}", "translations.foo.en.yml"),
+        ):
+            with self.subTest(filename_format=filename_format):
+                config.set("filename_format", filename_format)
+                self.assertEqual(
+                    resource_loader.get_namespace_from_filepath(filename), "foo"
+                )
+                self.assertEqual(
+                    resource_loader.get_namespace_from_filepath(
+                        os.path.join("app", filename)
+                    ),
+                    "app.foo",
+                )
+
+    def test_missing_namespace_field_raises_loader_error(self):
+        config.set("filename_format", "{locale}.{namespace}.{format}")
+        with self.assertRaises(I18nFileLoadError):
+            resource_loader.get_namespace_from_filepath("en")
+
+    def test_translation_with_locale_first_filename(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("filename_format", "{locale}.{namespace}.{format}")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(
+                os.path.join(directory, "en.custom_filename.json"), "w", encoding="utf-8"
+            ) as resource:
+                resource.write('{"en": {"greeting": "Hello"}}')
+            config.set("load_path", [directory])
+            self.assertEqual(t("custom_filename.greeting"), "Hello")
+
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
         resource_loader.init_yaml_loader()
@@ -257,7 +291,7 @@ class TestFileLoader(unittest.TestCase):
         )
         config.set("filename_format", "{locale}.{format}")
         config.set("skip_locale_root_data", True)
-        config.set("locale", ["en", "pl"])
+        config.set("available_locales", ["en", "pl"])
         resource_loader.search_translation("COMMON.VERSION")
         self.assertTrue(translations.has("COMMON.VERSION"))
         self.assertEqual(translations.get("COMMON.VERSION"), "version")
@@ -274,7 +308,7 @@ class TestFileLoader(unittest.TestCase):
         )
         config.set("filename_format", "{locale}.{format}")
         config.set("skip_locale_root_data", True)
-        config.set("locale", ["en", "pl"])
+        config.set("available_locales", ["en", "pl"])
         resource_loader.search_translation("COMMON.VERSION", locale="pl")
         self.assertTrue(translations.has("COMMON.VERSION", locale="pl"))
         self.assertEqual(translations.get("COMMON.VERSION", locale="pl"), "wersja")
