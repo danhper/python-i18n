@@ -22,10 +22,8 @@ def load_resource(filename, root_data):
     resource_name = filename.name if hasattr(filename, "read_text") else filename
     extension = os.path.splitext(resource_name)[1][1:]
     if extension not in loaders:
-        raise I18nFileLoadError(
-            "no loader available for extension {0}".format(extension)
-        )
-    return getattr(loaders[extension], "load_resource")(filename, root_data)
+        raise I18nFileLoadError(f"no loader available for extension {extension}")
+    return loaders[extension].load_resource(filename, root_data)
 
 
 def init_loaders():
@@ -138,12 +136,16 @@ def load_all(locales=None):
         raise error
 
     for root in config.get("load_path"):
-        for directory, subdirectories, filenames in os.walk(root, onerror=raise_walk_error):
+        for directory, subdirectories, filenames in os.walk(
+            root, onerror=raise_walk_error
+        ):
             subdirectories.sort()
             for filename in sorted(filenames):
                 for locale, pattern in patterns:
                     if pattern.fullmatch(filename):
-                        relative_path = os.path.relpath(os.path.join(directory, filename), root)
+                        relative_path = os.path.relpath(
+                            os.path.join(directory, filename), root
+                        )
                         load_translation_file(relative_path, root, locale)
 
 
@@ -184,7 +186,9 @@ def search_package(package, namespace, locale):
             root_data = None if config.get("skip_locale_root_data") else locale
             data = load_resource(resource, root_data)
             relative_name = os.path.join(*(directories + [filename]))
-            load_translation_dic(data, get_namespace_from_filepath(relative_name), locale)
+            load_translation_dic(
+                data, get_namespace_from_filepath(relative_name), locale
+            )
             return
         subdirectory = root.joinpath(part)
         if not subdirectory.is_dir():

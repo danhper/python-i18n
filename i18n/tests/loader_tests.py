@@ -1,7 +1,3 @@
-# -*- encoding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 import json
 import os
 import os.path
@@ -35,7 +31,7 @@ class TestFileLoader(unittest.TestCase):
                 resource_loader.load_resource("foo.bar", "baz")
 
     def test_register_wrong_loader(self):
-        class WrongLoader(object):
+        class WrongLoader:
             pass
 
         with self.assertRaises(ValueError):
@@ -112,9 +108,8 @@ class TestFileLoader(unittest.TestCase):
         except AttributeError:
             # we are running python2, use mkdtemp
             tmp_dir_name = tempfile.mkdtemp()
-        fd = open("{}/{}".format(tmp_dir_name, memoization_file_name), "w")
-        fd.write("en:\n  key: value")
-        fd.close()
+        with open(f"{tmp_dir_name}/{memoization_file_name}", "w") as fd:
+            fd.write("en:\n  key: value")
         # create the loader and pass the file to it
         resource_loader.init_yaml_loader()
         resource_loader.load_translation_file(memoization_file_name, tmp_dir_name)
@@ -274,7 +269,7 @@ class TestFileLoader(unittest.TestCase):
         config.set("file_format", "json")
         with tempfile.TemporaryDirectory() as directory:
             for namespace, locale in (("foo", "en"), ("bar", "en"), ("english", "de")):
-                filename = "{}.{}.json".format(namespace, locale)
+                filename = f"{namespace}.{locale}.json"
                 with open(os.path.join(directory, filename), "w") as stream:
                     json.dump({locale: {"greeting": namespace}}, stream)
             resource_loader.load_directory(directory, "en")
