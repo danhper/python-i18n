@@ -52,6 +52,30 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
 Please note that YAML format is used as default file format if you have `yaml` module installed.
 If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
 
+### Loading translations at startup
+
+Files are normally loaded when a translation is first requested. To move that
+disk access to application startup, load the configured locales explicitly:
+
+```python
+import i18n
+from i18n import config
+
+i18n.load_path.append('/path/to/translations')
+config.set('available_locales', ['en', 'fr'])
+i18n.load_all()
+```
+
+`load_all()` reads matching files recursively under every configured load path,
+preserving file and directory namespaces and the active locale. It uses the
+configured `filename_format`, `file_format` and encoding. You can instead pass
+`i18n.load_all(['fr'])` to load only selected locales. Missing directories and
+invalid translation files raise their usual loader errors during startup.
+
+Subsequent lookups of loaded keys use the translation container. Missing keys
+still follow the normal search and fallback behavior; preloading does not cache
+missing translations or watch files for changes.
+
 ### Memoization
 
 Setting the configuration value `enable_memoization` in the settings dir will load the files from disk the first time they

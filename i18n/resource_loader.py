@@ -117,6 +117,36 @@ def load_directory(directory, locale=None):
             load_translation_file(f, directory, locale)
 
 
+def load_all(locales=None):
+    """Eagerly load configured translation files, including directory namespaces."""
+    if locales is None:
+        locales = config.get("available_locales")
+    patterns = [
+        (
+            locale,
+            re.compile(
+                re.escape(config.get("filename_format"))
+                .replace(r"\{locale\}", re.escape(locale))
+                .replace(r"\{format\}", re.escape(config.get("file_format")))
+                .replace(r"\{namespace\}", ".+")
+            ),
+        )
+        for locale in locales
+    ]
+
+    def raise_walk_error(error):
+        raise error
+
+    for root in config.get("load_path"):
+        for directory, subdirectories, filenames in os.walk(root, onerror=raise_walk_error):
+            subdirectories.sort()
+            for filename in sorted(filenames):
+                for locale, pattern in patterns:
+                    if pattern.fullmatch(filename):
+                        relative_path = os.path.relpath(os.path.join(directory, filename), root)
+                        load_translation_file(relative_path, root, locale)
+
+
 def search_translation(key, locale=None):
     if locale is None:
         locale = config.get("locale")
