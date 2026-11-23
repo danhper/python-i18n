@@ -52,6 +52,33 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
 Please note that YAML format is used as default file format if you have `yaml` module installed.
 If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
 
+### File encoding
+
+Translation files are read as UTF-8 by default. Save JSON and YAML files as UTF-8
+in your editor; accented characters such as `é` can appear directly in a UTF-8
+file. JSON's `\u00e9` escape represents the same character.
+
+An error such as `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9` usually
+means the file was saved in another encoding, rather than that translated text
+must be ASCII. If you must use a known legacy encoding, configure it **before
+loading any translations**:
+
+```python
+import i18n
+from i18n import config
+
+config.set('encoding', 'cp1252')  # Use the actual encoding of your files.
+config.set('file_format', 'json')
+i18n.load_path.append('/path/to/translations')
+print(i18n.t('messages.nomF'))  # Fichiers supervisés enregistrés
+```
+
+This setting applies to all files the loaders read; it does not auto-detect
+encodings. Converting mixed-encoding files to UTF-8 avoids changing the setting
+between loads. Already loaded translations and memoized file contents are not
+re-decoded when the setting changes, so restart the application after converting
+the files or changing its encoding configuration.
+
 ### Memoization
 
 Setting the configuration value `enable_memoization` in the settings dir will load the files from disk the first time they
