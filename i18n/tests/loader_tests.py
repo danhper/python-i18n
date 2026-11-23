@@ -187,7 +187,9 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{locale}.{namespace}.{format}")
         with tempfile.TemporaryDirectory() as directory:
             with open(
-                os.path.join(directory, "en.custom_filename.json"), "w", encoding="utf-8"
+                os.path.join(directory, "en.custom_filename.json"),
+                "w",
+                encoding="utf-8",
             ) as resource:
                 resource.write('{"en": {"greeting": "Hello"}}')
             config.set("load_path", [directory])
@@ -278,6 +280,29 @@ class TestFileLoader(unittest.TestCase):
             resource_loader.load_directory(directory, "en")
             self.assertEqual(translations.get("foo.greeting", "en"), "foo")
             self.assertEqual(translations.get("bar.greeting", "en"), "bar")
+
+    def test_search_without_namespace_respects_literal_filename(self):
+        resource_loader.init_loaders()
+        formats = ["json", "yml"] if yaml_available else ["json"]
+        for file_format in formats:
+            for filename_format in ("translations.{format}", "messages(1).{format}"):
+                with self.subTest(format=file_format, filename=filename_format):
+                    translations.container = {}
+                    config.set("file_format", file_format)
+                    config.set("filename_format", filename_format)
+                    with tempfile.TemporaryDirectory() as directory:
+                        filename = filename_format.format(format=file_format)
+                        with open(os.path.join(directory, filename), "w") as stream:
+                            json.dump({"en": {"greeting": "Hello"}}, stream)
+                        # This file belongs to another tool and cannot be
+                        # parsed as translations. Merely sharing the extension
+                        # must not make it part of the configured resource.
+                        with open(
+                            os.path.join(directory, "synonyms." + file_format), "w"
+                        ) as stream:
+                            stream.write("[")
+                        config.set("load_path", [directory])
+                        self.assertEqual(t("greeting"), "Hello")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns_nested_dict__two_levels_neting__default_locale(
