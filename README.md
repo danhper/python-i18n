@@ -52,6 +52,29 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
 Please note that YAML format is used as default file format if you have `yaml` module installed.
 If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
 
+### Translation files inside Python packages
+
+Add an importable package name to `load_package_path` to read JSON or YAML
+translations with `importlib.resources.files()`:
+
+    import i18n
+    i18n.config.set('file_format', 'json')
+    i18n.load_package_path.append('my_app.translations')
+    i18n.t('greetings.hello', locale='en')
+
+For example, package `my_app.translations` can contain
+`greetings.en.json` with `{"en": {"hello": "Hello"}}`. Include the
+translation files as package data when building your distribution.
+Resources work in filesystem packages and ZIP-imported packages without
+extracting their contents to temporary files.
+
+Filename formats, directory namespaces, locale roots, encoding and memoization
+work as for filesystem translations. Package roots are searched after
+`load_path`, in list order; later sources can replace earlier translations.
+The built-in JSON and YAML loaders support package resources. Custom
+text loaders can inherit from `i18n.loaders.loader.Loader`; Python-module
+translation files are not supported through `load_package_path`.
+
 ### File encoding
 
 Translation files are read as UTF-8 by default. Save JSON and YAML files as UTF-8

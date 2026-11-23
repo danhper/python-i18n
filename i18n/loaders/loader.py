@@ -20,6 +20,8 @@ class Loader(object):
 
     def _load_file_data(self, filename):
         try:
+            if hasattr(filename, "read_text"):
+                return filename.read_text(encoding=config.get("encoding"))
             with io.open(filename, "r", encoding=config.get("encoding")) as f:
                 return f.read()
         except IOError as e:
@@ -30,9 +32,10 @@ class Loader(object):
     def load_file(self, filename):
         enable_memoization = config.get("enable_memoization")
         if enable_memoization:
-            if filename not in self.memoization_dict:
-                self.memoization_dict[filename] = self._load_file_data(filename)
-            return self.memoization_dict[filename]
+            cache_key = str(filename)
+            if cache_key not in self.memoization_dict:
+                self.memoization_dict[cache_key] = self._load_file_data(filename)
+            return self.memoization_dict[cache_key]
         else:
             return self._load_file_data(filename)
 

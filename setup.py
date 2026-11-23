@@ -14,6 +14,7 @@ setup(
     packages=["i18n", "i18n.loaders", "i18n.tests"],
     include_package_data=True,
     zip_safe=True,
+    python_requires=">=3.9",
     test_suite="i18n.tests",
     extras_require={
         "YAML": ["pyyaml>=3.10"],
