@@ -6,11 +6,25 @@ This library provides i18n functionality for Python 3 out of the box. The usage 
 
 Just run
 
-    pip install python-i18n
+    python -m pip install python-i18n
 
 If you want to use YAML to store your translations, use
 
-    pip install python-i18n[YAML]
+    python -m pip install "python-i18n[YAML]"
+
+Keep the quotes around the extra: shells such as zsh otherwise interpret the
+square brackets as a filename pattern and may report `no matches found`.
+Use the same Python interpreter that runs your application, including in CI.
+
+If loading a `.yml` or `.yaml` file raises `no loader available for extension`,
+check that this interpreter can import PyYAML:
+
+    python -c "import yaml; print(yaml.__version__)"
+
+If the import fails, install the YAML extra with the command above. Restart any
+running application afterward, because available loaders are selected when
+`i18n` is imported. Renaming a file from `.yml` to `.yaml` does not supply the
+missing dependency; both extensions use the same loader.
 
 ## Usage
 
