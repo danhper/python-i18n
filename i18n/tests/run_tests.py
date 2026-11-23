@@ -2,8 +2,8 @@ import unittest
 
 from i18n.tests.loader_tests import TestFileLoader
 from i18n.tests.locale_tests import TestTranslationLocale
-from i18n.tests.preload_tests import TestPreload
 from i18n.tests.package_tests import TestPackageResources
+from i18n.tests.preload_tests import TestPreload
 from i18n.tests.translation_tests import TestTranslationFormat
 
 
