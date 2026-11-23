@@ -77,6 +77,45 @@ If your files are in subfolders, the foldernames are also used as namespaces, so
 
 ## Functionalities
 
+### Finding keys from translated text
+
+There is no inverse `t()` operation: several keys can have the same text, and
+pluralization, placeholders and fallback can produce additional results. For an
+exact lookup of stored strings in one locale, build an index from the loaded
+translations. Keep a list of keys for each text so duplicate values are retained.
+
+For example, with `messages.de_DE.yml`:
+
+```yaml
+de_DE:
+  hello: Hallo
+  greeting: Hallo
+```
+
+```python
+from collections import defaultdict
+from i18n import resource_loader, translations
+
+locale = 'de_DE'
+resource_loader.load_translation_file(
+    'messages.de_DE.yml', '/path/to/translations', locale=locale
+)
+keys_by_text = defaultdict(list)
+for key, value in translations.container.get(locale, {}).items():
+    if isinstance(value, str):
+        keys_by_text[value].append(key)
+
+assert keys_by_text.get('Hallo', []) == ['messages.hello', 'messages.greeting']
+assert keys_by_text.get('Unknown', []) == []
+```
+
+Files are loaded lazily by `t()`, so `translations.container` contains only the
+translations already loaded or added with `add_translation`. Explicitly load each
+file you want to include before building the index. Its keys retain their
+namespaces; it does not search fallback locales or format placeholders. Non-string
+values (such as plural dictionaries and arrays) are omitted. Read the container
+without changing it, and rebuild the index after adding or reloading translations.
+
 ### Placeholder
 
 You can of course use placeholders in your translations. With the default configuration, the placeholders are used by inserting `%{placeholder_name}` in the ntranslation string. Here is a sample usage.
