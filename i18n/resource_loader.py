@@ -101,18 +101,16 @@ def load_directory(directory, locale=None):
     if locale is None:
         locale = config.get("locale")
     filename_format = config.get("filename_format")
-    filename_pattern = None
-    if "{locale}" in filename_format:
-        filename_pattern = (
-            re.escape(filename_format)
-            .replace(r"\{locale\}", re.escape(locale))
-            .replace(r"\{format\}", re.escape(config.get("file_format")))
-            .replace(r"\{namespace\}", ".+")
-        )
+    filename_pattern = (
+        re.escape(filename_format)
+        .replace(r"\{locale\}", re.escape(locale))
+        .replace(r"\{format\}", re.escape(config.get("file_format")))
+        .replace(r"\{namespace\}", ".+")
+    )
     for f in os.listdir(directory):
         path = os.path.join(directory, f)
         if os.path.isfile(path) and path.endswith(config.get("file_format")):
-            if filename_pattern is not None and re.fullmatch(filename_pattern, f) is None:
+            if re.fullmatch(filename_pattern, f) is None:
                 continue
             load_translation_file(f, directory, locale)
 
