@@ -155,3 +155,49 @@ class TestTranslationFormat(unittest.TestCase):
         config.set("locale", "en")
         resource_loader.init_json_loader()
         self.assertEqual(t("COMMON.EXECUTE", locale="pl"), "Wykonaj")
+
+    def test_list(self):
+        months = t("foo.months")
+        self.assertEqual(len(months), 12)
+        self.assertEqual(months[1], "February")
+
+    def test_list_placeholders(self):
+        self.assertEqual(t("foo.welcome", user="Bob"), ["Hi Bob", "Welcome to Bob"])
+
+    def test_list_custom_placeholder_delimiter(self):
+        config.set("placeholder_delimiter", "#")
+        translations.add("foo.custom_list", ["Hi #{user}", "%{user}"])
+        self.assertEqual(t("foo.custom_list", user="Bob"), ["Hi Bob", "%{user}"])
+
+    def test_list_pluralization(self):
+        self.assertEqual(
+            t("foo.welcome_plural", count=1, user="Bob"),
+            ["A new user just joined!", "Hello Bob"],
+        )
+        self.assertEqual(
+            t("foo.welcome_plural", count=3, user="Bob"),
+            ["3 new users just joined!", "Hello Bob"],
+        )
+
+    def test_list_strings_with_count_and_missing_plural_error(self):
+        config.set("error_on_missing_plural", True)
+        self.assertEqual(
+            t("foo.welcome", count=2, user="Bob"), ["Hi Bob", "Welcome to Bob"]
+        )
+
+    def test_list_dict_without_count_is_unchanged(self):
+        self.assertEqual(
+            t("foo.welcome_plural", user="Bob")[0],
+            {
+                "one": "A new user just joined!",
+                "many": "%{count} new users just joined!",
+            },
+        )
+
+    def test_list_mixed_values(self):
+        self.assertEqual(t("foo.mixed", user="Bob"), [42, ["nested Bob", "deep"], None])
+
+    def test_list_fallback(self):
+        config.set("locale", "fr")
+        config.set("fallback", "en")
+        self.assertEqual(t("foo.welcome", user="Bob")[0], "Hi Bob")

@@ -212,6 +212,30 @@ Pluralization is based on Rail i18n module. By passing a `count` variable to you
     i18n.t('mail_number', count=3) # You only have 3 new mails.
     i18n.t('mail_number', count=12) # You have 12 new mails.
 
+### Lists
+
+A translation value can be a list. `t()` then returns a list, with placeholders
+filled in every string item. When you pass `count`, plural dictionaries inside
+the list are pluralized; without `count` they are returned unchanged. Nested
+lists are handled the same way, and other values (numbers, `null`) are returned
+as they are. For example, with `foo.en.yml`:
+
+```yaml
+en:
+  months:
+    - January
+    - February
+  welcome:
+    - one: A new user just joined!
+      many: "%{count} new users just joined!"
+    - Hello %{user}
+```
+
+```python
+i18n.t('foo.months')[1]                    # February
+i18n.t('foo.welcome', count=3, user='Bob') # ['3 new users just joined!', 'Hello Bob']
+```
+
 ### Fallback
 
 You can set a fallback which will be used when the key is not found in the default locale.

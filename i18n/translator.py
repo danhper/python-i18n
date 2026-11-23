@@ -48,10 +48,30 @@ def t(key, **kwargs):
 def translate(key, **kwargs):
     locale = kwargs.pop("locale", config.get("locale"))
     translation = translations.get(key, locale=locale)
+    formatter = _formatter_for_delimiter(config.get("placeholder_delimiter"))
+    if isinstance(translation, list):
+        return _translate_list(key, translation, formatter, kwargs)
     if "count" in kwargs:
         translation = pluralize(key, translation, kwargs["count"])
-    formatter = _formatter_for_delimiter(config.get("placeholder_delimiter"))
     return formatter(translation).format(**kwargs)
+
+
+def _translate_list(key, items, formatter, kwargs):
+    # Strings are formatted, plural dictionaries are pluralized when a count is
+    # given, nested lists are handled recursively and other values are kept.
+    result = []
+    for item in items:
+        if isinstance(item, list):
+            item = _translate_list(key, item, formatter, kwargs)
+        elif isinstance(item, dict):
+            if "count" in kwargs:
+                item = pluralize(key, item, kwargs["count"])
+                if isinstance(item, str):
+                    item = formatter(item).format(**kwargs)
+        elif isinstance(item, str):
+            item = formatter(item).format(**kwargs)
+        result.append(item)
+    return result
 
 
 def pluralize(key, translation, count):

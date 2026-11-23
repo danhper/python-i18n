@@ -7,3 +7,28 @@ en:
     one: You have a new mail.
     few: You only have %{count} mails.
     many: You have %{count} new mails.
+  months:
+    - January
+    - February
+    - March
+    - April
+    - May
+    - June
+    - July
+    - August
+    - September
+    - October
+    - November
+    - December
+  welcome:
+    - Hi %{user}
+    - Welcome to %{user}
+  welcome_plural:
+    - one: A new user just joined!
+      many: "%{count} new users just joined!"
+    - Hello %{user}
+  mixed:
+    - 42
+    - - nested %{user}
+      - deep
+    - null
