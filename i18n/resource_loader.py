@@ -1,6 +1,6 @@
 import os.path
 import re
-import sys
+from importlib.resources import files
 
 from . import config, translations
 from .loaders.loader import I18nFileLoadError
@@ -137,12 +137,6 @@ def search_translation(key, locale=None):
 
 
 def search_package(package, namespace, locale):
-    # Import lazily so filesystem-only users do not need the backport.
-    if sys.version_info >= (3, 9):
-        from importlib.resources import files
-    else:
-        from importlib_resources import files
-
     if config.get("file_format") == "py":
         raise I18nFileLoadError("package resources require a text-based loader")
     root = files(package)
@@ -155,7 +149,10 @@ def search_package(package, namespace, locale):
             namespace=part, format=config.get("file_format"), locale=locale
         )
         resource = root.joinpath(filename)
-        if resource.is_file():
+        # Early 3.9 zipfile.Path.is_file() reports missing entries as files,
+        # and Traversable has no exists(), so confirm the name is listed.
+        names = {entry.name for entry in root.iterdir()}
+        if filename in names and resource.is_file():
             root_data = None if config.get("skip_locale_root_data") else locale
             data = load_resource(resource, root_data)
             relative_name = os.path.join(*(directories + [filename]))

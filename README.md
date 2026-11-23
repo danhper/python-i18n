@@ -75,9 +75,6 @@ The built-in JSON and YAML loaders support package resources. Custom
 text loaders can inherit from `i18n.loaders.loader.Loader`; Python-module
 translation files are not supported through `load_package_path`.
 
-Python 3.7 and 3.8 use the `importlib-resources` backport installed by the
-package dependency marker. Python 3.9 and newer use the standard library.
-
 ### Memoization
 
 Setting the configuration value `enable_memoization` in the settings dir will load the files from disk the first time they
