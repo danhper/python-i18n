@@ -52,6 +52,56 @@ in `/path/to/translations` folder, you simply need to add the folder to the tran
 Please note that YAML format is used as default file format if you have `yaml` module installed.
 If both `yaml` and `json` modules available and you want to use JSON to store translations, explicitly specify that: `i18n.set('file_format', 'json')`
 
+### Translation files inside Python packages
+
+Add an importable package name to `load_package_path` to read JSON or YAML
+translations with `importlib.resources.files()`:
+
+    import i18n
+    i18n.config.set('file_format', 'json')
+    i18n.load_package_path.append('my_app.translations')
+    i18n.t('greetings.hello', locale='en')
+
+For example, package `my_app.translations` can contain
+`greetings.en.json` with `{"en": {"hello": "Hello"}}`. Include the
+translation files as package data when building your distribution.
+Resources work in filesystem packages and ZIP-imported packages without
+extracting their contents to temporary files.
+
+Filename formats, directory namespaces, locale roots, encoding and memoization
+work as for filesystem translations. Package roots are searched after
+`load_path`, in list order; later sources can replace earlier translations.
+The built-in JSON and YAML loaders support package resources. Custom
+text loaders can inherit from `i18n.loaders.loader.Loader`; Python-module
+translation files are not supported through `load_package_path`.
+
+### File encoding
+
+Translation files are read as UTF-8 by default. Save JSON and YAML files as UTF-8
+in your editor; accented characters such as `é` can appear directly in a UTF-8
+file. JSON's `\u00e9` escape represents the same character.
+
+An error such as `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9` usually
+means the file was saved in another encoding, rather than that translated text
+must be ASCII. If you must use a known legacy encoding, configure it **before
+loading any translations**:
+
+```python
+import i18n
+from i18n import config
+
+config.set('encoding', 'cp1252')  # Use the actual encoding of your files.
+config.set('file_format', 'json')
+i18n.load_path.append('/path/to/translations')
+print(i18n.t('messages.nomF'))  # Fichiers supervisés enregistrés
+```
+
+This setting applies to all files the loaders read; it does not auto-detect
+encodings. Converting mixed-encoding files to UTF-8 avoids changing the setting
+between loads. Already loaded translations and memoized file contents are not
+re-decoded when the setting changes, so restart the application after converting
+the files or changing its encoding configuration.
+
 ### Loading translations at startup
 
 Files are normally loaded when a translation is first requested. To move that
@@ -100,6 +150,45 @@ To remove `{namespace}` from filename format please change the `filename_format`
 If your files are in subfolders, the foldernames are also used as namespaces, so for example if your translation root path is `/path/to/translations` and you have the file `/path/to/translations/my/app/name/foo.en.yml`, the translation namespace for the file will be `my.app.name` and the file keys will therefore be accessible from `my.app.name.foo.my_key`.
 
 ## Functionalities
+
+### Finding keys from translated text
+
+There is no inverse `t()` operation: several keys can have the same text, and
+pluralization, placeholders and fallback can produce additional results. For an
+exact lookup of stored strings in one locale, build an index from the loaded
+translations. Keep a list of keys for each text so duplicate values are retained.
+
+For example, with `messages.de_DE.yml`:
+
+```yaml
+de_DE:
+  hello: Hallo
+  greeting: Hallo
+```
+
+```python
+from collections import defaultdict
+from i18n import resource_loader, translations
+
+locale = 'de_DE'
+resource_loader.load_translation_file(
+    'messages.de_DE.yml', '/path/to/translations', locale=locale
+)
+keys_by_text = defaultdict(list)
+for key, value in translations.container.get(locale, {}).items():
+    if isinstance(value, str):
+        keys_by_text[value].append(key)
+
+assert keys_by_text.get('Hallo', []) == ['messages.hello', 'messages.greeting']
+assert keys_by_text.get('Unknown', []) == []
+```
+
+Files are loaded lazily by `t()`, so `translations.container` contains only the
+translations already loaded or added with `add_translation`. Explicitly load each
+file you want to include before building the index. Its keys retain their
+namespaces; it does not search fallback locales or format placeholders. Non-string
+values (such as plural dictionaries and arrays) are omitted. Read the container
+without changing it, and rebuild the index after adding or reloading translations.
 
 ### Placeholder
 

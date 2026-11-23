@@ -8,3 +8,4 @@ from .translator import t as t
 
 resource_loader.init_loaders()
 load_path = config.get("load_path")
+load_package_path = config.get("load_package_path")

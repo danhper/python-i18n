@@ -15,6 +15,7 @@ settings = {
     "file_format": "yml" if yaml_available else "json" if json_available else "py",
     "available_locales": ["en"],
     "load_path": [],
+    "load_package_path": [],
     "locale": "en",
     "fallback": "en",
     "placeholder_delimiter": "%",
