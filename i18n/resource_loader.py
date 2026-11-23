@@ -1,4 +1,5 @@
 import os.path
+import re
 import sys
 
 from . import config, translations
@@ -71,14 +72,16 @@ def get_namespace_from_filepath(filename):
             if namespace:
                 namespace += config.get("namespace_delimiter")
             namespace += splitted_filename[
-                config.get("filename_format").index("{namespace}")
+                config.get("filename_format").split(".").index("{namespace}")
             ]
-        except ValueError:
+        except (ValueError, IndexError):
             raise I18nFileLoadError("incorrect file format.")
     return namespace
 
 
-def load_translation_file(filename, base_directory, locale=config.get("locale")):
+def load_translation_file(filename, base_directory, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     skip_locale_root_data = config.get("skip_locale_root_data")
     root_data = None if skip_locale_root_data else locale
     translations_dic = load_resource(os.path.join(base_directory, filename), root_data)
@@ -96,16 +99,29 @@ def load_translation_dic(dic, namespace, locale):
             translations.add(namespace + key, value, locale)
 
 
-def load_directory(directory, locale=config.get("locale")):
+def load_directory(directory, locale=None):
+    if locale is None:
+        locale = config.get("locale")
+    filename_format = config.get("filename_format")
+    filename_pattern = None
+    if "{locale}" in filename_format:
+        filename_pattern = (
+            re.escape(filename_format)
+            .replace(r"\{locale\}", re.escape(locale))
+            .replace(r"\{format\}", re.escape(config.get("file_format")))
+            .replace(r"\{namespace\}", ".+")
+        )
     for f in os.listdir(directory):
         path = os.path.join(directory, f)
         if os.path.isfile(path) and path.endswith(config.get("file_format")):
-            if "{locale}" in config.get("filename_format") and locale not in f:
+            if filename_pattern is not None and re.fullmatch(filename_pattern, f) is None:
                 continue
             load_translation_file(f, directory, locale)
 
 
-def search_translation(key, locale=config.get("locale")):
+def search_translation(key, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     splitted_key = key.split(config.get("namespace_delimiter"))
     if not splitted_key:
         return
@@ -152,9 +168,9 @@ def search_package(package, namespace, locale):
         root = subdirectory
 
 
-def recursive_search_dir(
-    splitted_namespace, directory, root_dir, locale=config.get("locale")
-):
+def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
+    if locale is None:
+        locale = config.get("locale")
     if not splitted_namespace:
         return
     seeked_file = config.get("filename_format").format(
