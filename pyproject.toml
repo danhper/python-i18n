@@ -11,7 +11,7 @@ authors = [
     { name = "Daniel Perez", email = "tuvistavie@gmail.com" }
 ]
 license = { file = "LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "pyyaml>=3.10"
 ]
