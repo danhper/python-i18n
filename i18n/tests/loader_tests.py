@@ -1,12 +1,14 @@
 import json
 import os
 import os.path
+import sys
 import tempfile
 import unittest
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
 from pathlib import Path
+from unittest.mock import patch
 
 from i18n import config, resource_loader, translations
 from i18n.config import json_available, yaml_available
@@ -91,6 +93,91 @@ class TestFileLoader(unittest.TestCase):
         )
         self.assertIn("foo", data)
         self.assertEqual("bar", data["foo"])
+
+    @patch.dict(sys.modules)
+    def test_python_config_uses_the_requested_path(self):
+        resource_loader.init_python_loader()
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+            patch.object(sys, "path", sys.path[:]),
+        ):
+            for directory, value in ((first, "first"), (second, "second")):
+                path = os.path.join(directory, "pyi18n_shared_config.py")
+                with open(path, "w") as stream:
+                    stream.write(f"settings = {{'source': '{value}'}}\n")
+                resource_loader.load_config(path)
+                self.assertEqual(config.get("source"), value)
+
+    @patch.dict(sys.modules)
+    def test_python_config_does_not_reuse_an_imported_module(self):
+        resource_loader.init_python_loader()
+        original_json = sys.modules["json"]
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(sys, "path", sys.path[:]),
+        ):
+            path = os.path.join(directory, "json.py")
+            with open(path, "w") as stream:
+                stream.write("settings = {'source': 'requested file'}\n")
+            resource_loader.load_config(path)
+            self.assertEqual(config.get("source"), "requested file")
+            self.assertIs(sys.modules["json"], original_json)
+
+    @patch.dict(sys.modules)
+    def test_python_config_keeps_sibling_imports_without_changing_sys_path(self):
+        resource_loader.init_python_loader()
+        original_path = sys.path[:]
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(sys, "path", original_path[:]),
+        ):
+            with open(os.path.join(directory, "pyi18n_local_value.py"), "w") as stream:
+                stream.write("value = 'from sibling'\n")
+            path = os.path.join(directory, "pyi18n_importing_config.py")
+            with open(path, "w") as stream:
+                stream.write(
+                    "from pyi18n_local_value import value\n"
+                    "settings = {'source': value}\n"
+                )
+            resource_loader.load_config(path)
+            self.assertEqual(config.get("source"), "from sibling")
+            self.assertEqual(sys.path, original_path)
+
+    @patch.dict(sys.modules)
+    def test_python_config_keeps_loaded_module_state(self):
+        resource_loader.init_python_loader()
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(sys, "path", sys.path[:]),
+        ):
+            path = os.path.join(directory, "pyi18n_cached_config.py")
+            with open(path, "w") as stream:
+                stream.write("settings = {'values': []}\n")
+            first = resource_loader.load_resource(path, "settings")
+            first["values"].append("loaded")
+            second = resource_loader.load_resource(path, "settings")
+            self.assertIs(first, second)
+            self.assertEqual(second["values"], ["loaded"])
+
+    @patch.dict(sys.modules)
+    def test_python_config_can_be_retried_after_import_failure(self):
+        resource_loader.init_python_loader()
+        original_path = sys.path[:]
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(sys, "path", original_path[:]),
+        ):
+            path = os.path.join(directory, "pyi18n_retry_config.py")
+            with open(path, "w") as stream:
+                stream.write("import pyi18n_missing_dependency\n")
+            with self.assertRaises(I18nFileLoadError):
+                resource_loader.load_config(path)
+            self.assertEqual(sys.path, original_path)
+            with open(path, "w") as stream:
+                stream.write("settings = {'source': 'retry'}\n")
+            resource_loader.load_config(path)
+            self.assertEqual(config.get("source"), "retry")
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_memoization_with_file(self):
