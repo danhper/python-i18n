@@ -1,3 +1,5 @@
+import hashlib
+import importlib.util
 import os.path
 import sys
 
@@ -11,14 +13,32 @@ class PythonLoader(Loader):
         super().__init__()
 
     def load_file(self, filename):
-        path, name = os.path.split(filename)
-        module_name, _ext = os.path.splitext(name)
-        if path not in sys.path:
-            sys.path.append(path)
-        try:
-            return __import__(module_name)
-        except ImportError:
+        filename = os.path.abspath(filename)
+        module_name = "_i18n_config_" + hashlib.sha256(os.fsencode(filename)).hexdigest()
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        spec = importlib.util.spec_from_file_location(module_name, filename)
+        if spec is None or spec.loader is None:
             raise I18nFileLoadError(f"error loading file {filename}")
+        module = importlib.util.module_from_spec(spec)
+        path = os.path.dirname(filename)
+        added_path = path not in sys.path
+        if added_path:
+            sys.path.append(path)
+        sys.modules[module_name] = module
+        loaded = False
+        try:
+            spec.loader.exec_module(module)
+            loaded = True
+        except (ImportError, OSError) as error:
+            raise I18nFileLoadError(f"error loading file {filename}") from error
+        finally:
+            if not loaded:
+                sys.modules.pop(module_name, None)
+            if added_path and path in sys.path:
+                sys.path.remove(path)
+        return module
 
     def parse_file(self, file_content):
         return file_content
