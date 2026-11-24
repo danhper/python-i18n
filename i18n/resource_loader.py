@@ -205,10 +205,15 @@ def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
     seeked_file = config.get("filename_format").format(
         namespace=splitted_namespace[0], format=config.get("file_format"), locale=locale
     )
-    dir_content = os.listdir(os.path.join(root_dir, directory))
-    if seeked_file in dir_content:
+    search_directory = os.path.join(root_dir, directory)
+    dir_content = os.listdir(search_directory)
+    if seeked_file in dir_content and os.path.isfile(
+        os.path.join(search_directory, seeked_file)
+    ):
         load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
-    elif splitted_namespace[0] in dir_content:
+    elif splitted_namespace[0] in dir_content and os.path.isdir(
+        os.path.join(search_directory, splitted_namespace[0])
+    ):
         recursive_search_dir(
             splitted_namespace[1:],
             os.path.join(directory, splitted_namespace[0]),

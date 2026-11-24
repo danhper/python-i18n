@@ -228,6 +228,59 @@ class TestFileLoader(unittest.TestCase):
         resource_loader.search_translation("bar.baz.qux")
         self.assertTrue(translations.has("bar.baz.qux"))
 
+    def test_search_skips_directory_named_translation_file(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            os.mkdir(os.path.join(first, "greetings.en.json"))
+            with open(os.path.join(second, "greetings.en.json"), "w") as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [first, second])
+            self.assertEqual(t("greetings.hello"), "Hello")
+
+    def test_search_skips_file_named_namespace_directory(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            with open(os.path.join(first, "nested"), "w") as stream:
+                stream.write("An unrelated file")
+            os.mkdir(os.path.join(second, "nested"))
+            with open(
+                os.path.join(second, "nested", "greetings.en.json"), "w"
+            ) as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [first, second])
+            self.assertEqual(t("nested.greetings.hello"), "Hello")
+
+    def test_search_descends_after_directory_named_translation_file(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with tempfile.TemporaryDirectory() as directory:
+            os.mkdir(os.path.join(directory, "nested.en.json"))
+            os.mkdir(os.path.join(directory, "nested"))
+            with open(
+                os.path.join(directory, "nested", "greetings.en.json"), "w"
+            ) as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [directory])
+            self.assertEqual(t("nested.greetings.hello"), "Hello")
+
+    def test_search_keeps_translation_file_errors(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(os.path.join(directory, "greetings.en.json"), "w") as stream:
+                stream.write("[")
+            config.set("load_path", [directory])
+            with self.assertRaises(I18nFileLoadError):
+                t("greetings.hello")
+
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns(self):
         resource_loader.init_json_loader()
