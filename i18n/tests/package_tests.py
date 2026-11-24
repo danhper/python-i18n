@@ -77,6 +77,21 @@ class TestPackageResources(unittest.TestCase):
         config.set("filename_format", "{locale}.{format}")
         self.assertEqual(t("hello", locale="en"), "Hello from root")
 
+    def test_zip_locale_only_files_in_directory_namespaces(self):
+        with zipfile.ZipFile(self.archive, "a") as archive:
+            archive.writestr(
+                "i18n_test_resources/nested/en.json",
+                json.dumps({"en": {"hello": "Nested locale file"}}),
+            )
+            archive.writestr(
+                "i18n_test_resources/nested/deep/en.json",
+                json.dumps({"en": {"hello": "Deep locale file"}}),
+            )
+        config.set("filename_format", "{locale}.{format}")
+        self.assertEqual(t("nested.hello", locale="en"), "Nested locale file")
+        self.assertEqual(t("nested.deep.hello", locale="en"), "Deep locale file")
+        self.assertEqual(t("hello", locale="en"), "Hello from root")
+
     def test_zip_package_without_locale_root(self):
         config.set("skip_locale_root_data", True)
         self.assertEqual(t("raw.hello", locale="en"), "Raw")

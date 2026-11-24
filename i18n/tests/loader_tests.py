@@ -27,6 +27,29 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
 
+    def test_locale_only_files_in_directory_namespaces(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("filename_format", "{locale}.{format}")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config.set("load_path", [directory])
+            for name, contents in (
+                ("en.json", {"root": "Root", "nested": {"from_root": "Parent"}}),
+                ("nested/en.json", {"hello": "Nested"}),
+                ("nested/deep/en.json", {"hello": "Deep"}),
+            ):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"en": contents}), encoding="utf-8")
+            self.assertEqual(t("nested.hello", locale="en"), "Nested")
+            self.assertEqual(t("nested.deep.hello", locale="en"), "Deep")
+            self.assertEqual(t("nested.from_root", locale="en"), "Parent")
+            self.assertEqual(t("root", locale="en"), "Root")
+            translations.container.clear()
+            config.set("namespace_delimiter", "/")
+            self.assertEqual(t("nested/deep/hello", locale="en"), "Deep")
+
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
             resource_loader.load_resource("foo.bar", "baz")

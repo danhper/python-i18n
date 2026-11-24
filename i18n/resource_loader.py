@@ -174,10 +174,12 @@ def search_package(package, namespace, locale):
         raise I18nFileLoadError("package resources require a text-based loader")
     root = files(package)
     filename_format = config.get("filename_format")
-    if not namespace and "{namespace}" in filename_format:
+    has_filename_namespace = "{namespace}" in filename_format
+    if not namespace and has_filename_namespace:
         return
     directories = []
-    for part in namespace or [""]:
+    parts = namespace if has_filename_namespace else [*namespace, ""]
+    for part in parts:
         filename = filename_format.format(
             namespace=part, format=config.get("file_format"), locale=locale
         )
@@ -192,6 +194,9 @@ def search_package(package, namespace, locale):
             load_translation_dic(
                 data, get_namespace_from_filepath(relative_name, locale), locale
             )
+            if has_filename_namespace:
+                return
+        if not part:
             return
         subdirectory = root.joinpath(part)
         if not subdirectory.is_dir():
@@ -203,10 +208,14 @@ def search_package(package, namespace, locale):
 def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
     if locale is None:
         locale = config.get("locale")
-    if not splitted_namespace:
+    filename_format = config.get("filename_format")
+    has_filename_namespace = "{namespace}" in filename_format
+    if not splitted_namespace and has_filename_namespace:
         return
-    seeked_file = config.get("filename_format").format(
-        namespace=splitted_namespace[0], format=config.get("file_format"), locale=locale
+    seeked_file = filename_format.format(
+        namespace=splitted_namespace[0] if splitted_namespace else "",
+        format=config.get("file_format"),
+        locale=locale,
     )
     search_directory = os.path.join(root_dir, directory)
     dir_content = os.listdir(search_directory)
@@ -214,7 +223,9 @@ def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
         os.path.join(search_directory, seeked_file)
     ):
         load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
-    elif splitted_namespace[0] in dir_content and os.path.isdir(
+        if has_filename_namespace:
+            return
+    if splitted_namespace and splitted_namespace[0] in dir_content and os.path.isdir(
         os.path.join(search_directory, splitted_namespace[0])
     ):
         recursive_search_dir(
