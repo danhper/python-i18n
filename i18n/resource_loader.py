@@ -58,22 +58,25 @@ def load_config(filename):
         config.settings[key] = value
 
 
-def get_namespace_from_filepath(filename):
+def get_namespace_from_filepath(filename, locale=None):
     namespace = (
         os.path.dirname(filename)
         .strip(os.sep)
         .replace(os.sep, config.get("namespace_delimiter"))
     )
     if "{namespace}" in config.get("filename_format"):
-        try:
-            splitted_filename = os.path.basename(filename).split(".")
-            if namespace:
-                namespace += config.get("namespace_delimiter")
-            namespace += splitted_filename[
-                config.get("filename_format").split(".").index("{namespace}")
-            ]
-        except (ValueError, IndexError):
+        pattern = (
+            re.escape(config.get("filename_format"))
+            .replace(r"\{namespace\}", "(?P<namespace>.+)")
+            .replace(r"\{locale\}", re.escape(locale) if locale is not None else ".+?")
+            .replace(r"\{format\}", "[^.]+")
+        )
+        match = re.fullmatch(pattern, os.path.basename(filename))
+        if match is None:
             raise I18nFileLoadError("incorrect file format.")
+        if namespace:
+            namespace += config.get("namespace_delimiter")
+        namespace += match.group("namespace")
     return namespace
 
 
@@ -83,7 +86,7 @@ def load_translation_file(filename, base_directory, locale=None):
     skip_locale_root_data = config.get("skip_locale_root_data")
     root_data = None if skip_locale_root_data else locale
     translations_dic = load_resource(os.path.join(base_directory, filename), root_data)
-    namespace = get_namespace_from_filepath(filename)
+    namespace = get_namespace_from_filepath(filename, locale)
     load_translation_dic(translations_dic, namespace, locale)
 
 
@@ -187,7 +190,7 @@ def search_package(package, namespace, locale):
             data = load_resource(resource, root_data)
             relative_name = os.path.join(*(directories + [filename]))
             load_translation_dic(
-                data, get_namespace_from_filepath(relative_name), locale
+                data, get_namespace_from_filepath(relative_name, locale), locale
             )
             return
         subdirectory = root.joinpath(part)
