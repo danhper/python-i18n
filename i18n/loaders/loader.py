@@ -35,6 +35,7 @@ class Loader:
             else:
                 # Package Traversables need not represent filesystem paths.
                 cache_key = str(filename)
+            cache_key = (cache_key, config.get("encoding"))
             if cache_key not in self.memoization_dict:
                 self.memoization_dict[cache_key] = self._load_file_data(filename)
             return self.memoization_dict[cache_key]
