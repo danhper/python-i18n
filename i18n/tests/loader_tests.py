@@ -382,6 +382,52 @@ class TestFileLoader(unittest.TestCase):
         self.assertEqual(translated_plural["one"], "You have a new mail.")
         self.assertEqual(translated_plural["many"], "You have %{count} new mails.")
 
+    def test_nested_namespaces_can_use_plural_category_names(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        for plural_name in ("many", "other"):
+            with self.subTest(plural_name=plural_name):
+                translations.container.clear()
+                with tempfile.TemporaryDirectory() as directory:
+                    data = {
+                        "en": {
+                            "groups": {
+                                "one": {"name": "First group"},
+                                plural_name: {"name": "Remaining groups"},
+                            },
+                            "mail": {"one": "One mail", plural_name: "%{count} mails"},
+                        }
+                    }
+                    with open(
+                        os.path.join(directory, "messages.en.json"), "w"
+                    ) as stream:
+                        json.dump(data, stream)
+                    config.set("load_path", [directory])
+                    self.assertEqual(t("messages.groups.one.name"), "First group")
+                    self.assertEqual(
+                        t(f"messages.groups.{plural_name}.name"), "Remaining groups"
+                    )
+                    self.assertEqual(t("messages.mail", count=1), "One mail")
+                    self.assertEqual(t("messages.mail", count=5), "5 mails")
+
+    def test_plural_named_namespaces_can_contain_plural_translations(self):
+        resource_loader.load_translation_dic(
+            {
+                "groups": {
+                    "one": {"one": "One item in first group", "many": "%{count} items"},
+                    "many": {
+                        "one": "One item in remaining groups",
+                        "many": "%{count} items",
+                    },
+                }
+            },
+            "",
+            "en",
+        )
+        self.assertEqual(t("groups.one", count=1), "One item in first group")
+        self.assertEqual(t("groups.many", count=1), "One item in remaining groups")
+        self.assertEqual(t("groups.one", count=5), "5 items")
+
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_search_translation_yaml(self):
         resource_loader.init_yaml_loader()
