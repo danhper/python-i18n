@@ -277,20 +277,22 @@ class TestFileLoader(unittest.TestCase):
     def test_package_memoization_uses_the_current_encoding(self):
         resource_loader.init_json_loader()
         config.set("enable_memoization", True)
-        with tempfile.TemporaryDirectory() as directory:
-            with zipfile.ZipFile(Path(directory) / "translations.zip", "w") as archive:
-                archive.writestr(
-                    "settings.json", b'{"settings": {"greeting": "\xc3\xa9"}}'
-                )
-                resource = zipfile.Path(archive, "settings.json")
-                config.set("encoding", "latin-1")
-                first = resource_loader.load_resource(resource, "settings")
-                self.assertEqual(first["greeting"], "\u00c3\u00a9")
-                config.set("encoding", "utf-8")
-                self.assertEqual(
-                    resource_loader.load_resource(resource, "settings")["greeting"],
-                    "\u00e9",
-                )
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            zipfile.ZipFile(Path(directory) / "translations.zip", "w") as archive,
+        ):
+            archive.writestr(
+                "settings.json", b'{"settings": {"greeting": "\xc3\xa9"}}'
+            )
+            resource = zipfile.Path(archive, "settings.json")
+            config.set("encoding", "latin-1")
+            first = resource_loader.load_resource(resource, "settings")
+            self.assertEqual(first["greeting"], "\u00c3\u00a9")
+            config.set("encoding", "utf-8")
+            self.assertEqual(
+                resource_loader.load_resource(resource, "settings")["greeting"],
+                "\u00e9",
+            )
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
