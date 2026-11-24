@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 import unittest
@@ -33,6 +34,58 @@ class TestTranslationLocale(unittest.TestCase):
             with self.subTest(locale=locale):
                 config.set("locale", locale)
                 self.assertEqual(i18n.get("locale"), locale)
+
+    def test_public_load_paths_follow_configuration_replacement(self):
+        for setter in (i18n.set, config.set):
+            for name in ("load_path", "load_package_path"):
+                with self.subTest(setter=setter, name=name):
+                    replacement = []
+                    setter(name, replacement)
+                    self.assertIs(getattr(i18n, name), replacement)
+                    getattr(i18n, name).append("configured")
+                    self.assertEqual(config.get(name), ["configured"])
+
+    def test_public_load_paths_follow_loaded_configuration(self):
+        resource_loader.init_json_loader()
+        with tempfile.TemporaryDirectory() as directory:
+            filename = os.path.join(directory, "settings.json")
+            with open(filename, "w", encoding="utf-8") as stream:
+                json.dump(
+                    {"settings": {"load_path": [], "load_package_path": []}}, stream
+                )
+            i18n.load_config(filename)
+            for name in ("load_path", "load_package_path"):
+                self.assertIs(getattr(i18n, name), config.get(name))
+
+    def test_public_load_path_append_reaches_the_translation_loader(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("filename_format", "{namespace}.{locale}.{format}")
+        config.set("namespace_delimiter", ".")
+        config.set("skip_locale_root_data", False)
+        config.set("load_path", [])
+        config.set("load_package_path", [])
+        with tempfile.TemporaryDirectory() as directory:
+            filename = os.path.join(directory, "live.en.json")
+            with open(filename, "w", encoding="utf-8") as stream:
+                json.dump({"en": {"hello": "Hello from current path"}}, stream)
+            original_path = i18n.load_path[:]
+            self.addCleanup(i18n.load_path.__setitem__, slice(None), original_path)
+            i18n.load_path.append(directory)
+            self.assertEqual(
+                i18n.t("live.hello", locale="en"), "Hello from current path"
+            )
+
+    def test_public_load_paths_remain_discoverable_and_importable(self):
+        config.set("load_path", [])
+        config.set("load_package_path", [])
+        imported = {}
+        exec("from i18n import *", imported)  # noqa: S102
+        for name in ("load_path", "load_package_path"):
+            self.assertIn(name, dir(i18n))
+            self.assertIs(imported[name], config.get(name))
+        with self.assertRaises(AttributeError):
+            _ = i18n.unknown_configuration_attribute
 
     def test_lookup_defaults_follow_locale_changes(self):
         add_translation("greeting", "Hello", locale="en")
