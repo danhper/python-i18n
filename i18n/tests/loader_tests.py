@@ -7,6 +7,7 @@ import unittest
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
+from pathlib import Path
 from unittest.mock import patch
 
 from i18n import config, resource_loader, translations
@@ -210,6 +211,49 @@ class TestFileLoader(unittest.TestCase):
         # test the translation again to make sure it's loaded from memory
         self.assertEqual(t("memoize.key"), "value")
 
+    def test_memoization_distinguishes_relative_paths_after_chdir(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("enable_memoization", True)
+        config.set("load_path", ["."])
+        original_directory = os.getcwd()
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            for directory, key, text in (
+                (first, "first", "First directory"),
+                (second, "second", "Second directory"),
+            ):
+                with open(
+                    os.path.join(directory, "greetings.en.json"), "w"
+                ) as stream:
+                    json.dump({"en": {key: text}}, stream)
+            try:
+                os.chdir(first)
+                self.assertEqual(t("greetings.first"), "First directory")
+                os.chdir(second)
+                self.assertEqual(t("greetings.second"), "Second directory")
+            finally:
+                os.chdir(original_directory)
+
+    def test_memoization_shares_relative_and_absolute_file_paths(self):
+        resource_loader.init_json_loader()
+        config.set("enable_memoization", True)
+        original_directory = os.getcwd()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_text('{"settings": {"greeting": "Hello"}}', encoding="utf-8")
+            try:
+                os.chdir(directory)
+                expected = resource_loader.load_resource("settings.json", "settings")
+                path.unlink()
+                self.assertEqual(
+                    resource_loader.load_resource(path, "settings"), expected
+                )
+            finally:
+                os.chdir(original_directory)
+
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
         resource_loader.init_json_loader()
@@ -263,6 +307,32 @@ class TestFileLoader(unittest.TestCase):
         with self.assertRaises(I18nFileLoadError):
             resource_loader.get_namespace_from_filepath("en")
 
+    def test_custom_filename_separators_load_translations(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        for filename_format in (
+            "translations-{namespace}-{locale}.{format}",
+            "{locale}_{namespace}.{format}",
+            "[{namespace}].{locale}.{format}",
+        ):
+            with self.subTest(filename_format=filename_format):
+                translations.container.clear()
+                config.set("filename_format", filename_format)
+                with tempfile.TemporaryDirectory() as directory:
+                    filename = filename_format.format(
+                        namespace="messages", locale="en", format="json"
+                    )
+                    with open(os.path.join(directory, filename), "w") as stream:
+                        json.dump({"en": {"hello": "Hello"}}, stream)
+                    config.set("load_path", [directory])
+                    self.assertEqual(t("messages.hello"), "Hello")
+                    self.assertEqual(
+                        resource_loader.get_namespace_from_filepath(
+                            os.path.join("app", filename)
+                        ),
+                        "app.messages",
+                    )
+
     def test_translation_with_locale_first_filename(self):
         resource_loader.init_json_loader()
         config.set("file_format", "json")
@@ -276,6 +346,18 @@ class TestFileLoader(unittest.TestCase):
                 resource.write('{"en": {"greeting": "Hello"}}')
             config.set("load_path", [directory])
             self.assertEqual(t("custom_filename.greeting"), "Hello")
+
+    def test_filename_separators_inside_namespace_and_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("filename_format", "{namespace}-{locale}.{format}")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(
+                os.path.join(directory, "account-settings-en-US.json"), "w"
+            ) as stream:
+                json.dump({"en-US": {"hello": "Hello"}}, stream)
+            config.set("load_path", [directory])
+            self.assertEqual(t("account-settings.hello", locale="en-US"), "Hello")
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
@@ -314,6 +396,59 @@ class TestFileLoader(unittest.TestCase):
 
         resource_loader.search_translation("bar.baz.qux")
         self.assertTrue(translations.has("bar.baz.qux"))
+
+    def test_search_skips_directory_named_translation_file(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            os.mkdir(os.path.join(first, "greetings.en.json"))
+            with open(os.path.join(second, "greetings.en.json"), "w") as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [first, second])
+            self.assertEqual(t("greetings.hello"), "Hello")
+
+    def test_search_skips_file_named_namespace_directory(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            with open(os.path.join(first, "nested"), "w") as stream:
+                stream.write("An unrelated file")
+            os.mkdir(os.path.join(second, "nested"))
+            with open(
+                os.path.join(second, "nested", "greetings.en.json"), "w"
+            ) as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [first, second])
+            self.assertEqual(t("nested.greetings.hello"), "Hello")
+
+    def test_search_descends_after_directory_named_translation_file(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with tempfile.TemporaryDirectory() as directory:
+            os.mkdir(os.path.join(directory, "nested.en.json"))
+            os.mkdir(os.path.join(directory, "nested"))
+            with open(
+                os.path.join(directory, "nested", "greetings.en.json"), "w"
+            ) as stream:
+                json.dump({"en": {"hello": "Hello"}}, stream)
+            config.set("load_path", [directory])
+            self.assertEqual(t("nested.greetings.hello"), "Hello")
+
+    def test_search_keeps_translation_file_errors(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(os.path.join(directory, "greetings.en.json"), "w") as stream:
+                stream.write("[")
+            config.set("load_path", [directory])
+            with self.assertRaises(I18nFileLoadError):
+                t("greetings.hello")
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_search_translation_without_ns(self):

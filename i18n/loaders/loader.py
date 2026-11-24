@@ -1,3 +1,5 @@
+import os
+
 from .. import config
 
 
@@ -28,7 +30,11 @@ class Loader:
     def load_file(self, filename):
         enable_memoization = config.get("enable_memoization")
         if enable_memoization:
-            cache_key = str(filename)
+            if isinstance(filename, (str, os.PathLike)):
+                cache_key = os.path.abspath(filename)
+            else:
+                # Package Traversables need not represent filesystem paths.
+                cache_key = str(filename)
             if cache_key not in self.memoization_dict:
                 self.memoization_dict[cache_key] = self._load_file_data(filename)
             return self.memoization_dict[cache_key]

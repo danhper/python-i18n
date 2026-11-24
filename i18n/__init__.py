@@ -1,4 +1,6 @@
 from . import config, resource_loader
+from .config import get as get
+from .config import set as set
 from .resource_loader import I18nFileLoadError as I18nFileLoadError
 from .resource_loader import load_all as load_all
 from .resource_loader import load_config as load_config

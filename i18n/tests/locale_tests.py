@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 
+import i18n
 from i18n import add_translation, config, resource_loader, translations
 from i18n.translator import t
 
@@ -18,6 +19,20 @@ class TestTranslationLocale(unittest.TestCase):
         self.assertTrue(translations.has("greeting", locale="fr"))
         self.assertFalse(translations.has("greeting", locale="en"))
         self.assertEqual(t("greeting", locale="fr"), "Bonjour")
+
+    def test_public_set_changes_the_translation_locale(self):
+        i18n.add_translation("greeting", "Hello", locale="en")
+        i18n.add_translation("greeting", "Bonjour", locale="fr")
+        i18n.set("locale", "fr")
+        self.assertEqual(i18n.t("greeting"), "Bonjour")
+        i18n.set("locale", "en")
+        self.assertEqual(i18n.t("greeting"), "Hello")
+
+    def test_public_get_reads_current_configuration(self):
+        for locale in ("fr", "en"):
+            with self.subTest(locale=locale):
+                config.set("locale", locale)
+                self.assertEqual(i18n.get("locale"), locale)
 
     def test_lookup_defaults_follow_locale_changes(self):
         add_translation("greeting", "Hello", locale="en")
