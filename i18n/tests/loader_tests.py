@@ -6,6 +6,7 @@ import unittest
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
+from pathlib import Path
 
 from i18n import config, resource_loader, translations
 from i18n.config import json_available, yaml_available
@@ -122,6 +123,49 @@ class TestFileLoader(unittest.TestCase):
         shutil.rmtree(tmp_dir_name)
         # test the translation again to make sure it's loaded from memory
         self.assertEqual(t("memoize.key"), "value")
+
+    def test_memoization_distinguishes_relative_paths_after_chdir(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("enable_memoization", True)
+        config.set("load_path", ["."])
+        original_directory = os.getcwd()
+        with (
+            tempfile.TemporaryDirectory() as first,
+            tempfile.TemporaryDirectory() as second,
+        ):
+            for directory, key, text in (
+                (first, "first", "First directory"),
+                (second, "second", "Second directory"),
+            ):
+                with open(
+                    os.path.join(directory, "greetings.en.json"), "w"
+                ) as stream:
+                    json.dump({"en": {key: text}}, stream)
+            try:
+                os.chdir(first)
+                self.assertEqual(t("greetings.first"), "First directory")
+                os.chdir(second)
+                self.assertEqual(t("greetings.second"), "Second directory")
+            finally:
+                os.chdir(original_directory)
+
+    def test_memoization_shares_relative_and_absolute_file_paths(self):
+        resource_loader.init_json_loader()
+        config.set("enable_memoization", True)
+        original_directory = os.getcwd()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_text('{"settings": {"greeting": "Hello"}}', encoding="utf-8")
+            try:
+                os.chdir(directory)
+                expected = resource_loader.load_resource("settings.json", "settings")
+                path.unlink()
+                self.assertEqual(
+                    resource_loader.load_resource(path, "settings"), expected
+                )
+            finally:
+                os.chdir(original_directory)
 
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
