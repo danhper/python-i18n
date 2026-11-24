@@ -176,6 +176,32 @@ class TestFileLoader(unittest.TestCase):
         with self.assertRaises(I18nFileLoadError):
             resource_loader.get_namespace_from_filepath("en")
 
+    def test_custom_filename_separators_load_translations(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        for filename_format in (
+            "translations-{namespace}-{locale}.{format}",
+            "{locale}_{namespace}.{format}",
+            "[{namespace}].{locale}.{format}",
+        ):
+            with self.subTest(filename_format=filename_format):
+                translations.container.clear()
+                config.set("filename_format", filename_format)
+                with tempfile.TemporaryDirectory() as directory:
+                    filename = filename_format.format(
+                        namespace="messages", locale="en", format="json"
+                    )
+                    with open(os.path.join(directory, filename), "w") as stream:
+                        json.dump({"en": {"hello": "Hello"}}, stream)
+                    config.set("load_path", [directory])
+                    self.assertEqual(t("messages.hello"), "Hello")
+                    self.assertEqual(
+                        resource_loader.get_namespace_from_filepath(
+                            os.path.join("app", filename)
+                        ),
+                        "app.messages",
+                    )
+
     def test_translation_with_locale_first_filename(self):
         resource_loader.init_json_loader()
         config.set("file_format", "json")
@@ -189,6 +215,18 @@ class TestFileLoader(unittest.TestCase):
                 resource.write('{"en": {"greeting": "Hello"}}')
             config.set("load_path", [directory])
             self.assertEqual(t("custom_filename.greeting"), "Hello")
+
+    def test_filename_separators_inside_namespace_and_locale(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("filename_format", "{namespace}-{locale}.{format}")
+        with tempfile.TemporaryDirectory() as directory:
+            with open(
+                os.path.join(directory, "account-settings-en-US.json"), "w"
+            ) as stream:
+                json.dump({"en-US": {"hello": "Hello"}}, stream)
+            config.set("load_path", [directory])
+            self.assertEqual(t("account-settings.hello", locale="en-US"), "Hello")
 
     @unittest.skipUnless(yaml_available, "yaml library not available")
     def test_load_translation_file(self):
