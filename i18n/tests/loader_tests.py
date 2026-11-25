@@ -28,6 +28,45 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
 
+    def test_nonmapping_json_roots_raise_loader_errors(self):
+        resource_loader.init_json_loader()
+        for data in (None, True, 42, "en", ["en"]):
+            for root_data in ("en", None):
+                with (
+                    self.subTest(data=data, root_data=root_data),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    path = Path(directory) / "messages.en.json"
+                    path.write_text(json.dumps(data), encoding="utf-8")
+                    with self.assertRaisesRegex(I18nFileLoadError, path.name):
+                        resource_loader.load_resource(path, root_data)
+
+    def test_nonmapping_locale_data_raises_loader_errors(self):
+        resource_loader.init_json_loader()
+        for data in (None, True, 42, "hello", ["hello"]):
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "messages.en.json"
+                path.write_text(json.dumps({"en": data}), encoding="utf-8")
+                with self.assertRaisesRegex(I18nFileLoadError, "expected a mapping"):
+                    resource_loader.load_translation_file(path.name, directory)
+
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_empty_yaml_raises_loader_error(self):
+        resource_loader.init_yaml_loader()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "messages.en.yml"
+            path.write_text("# Translations have not been added yet.\n", encoding="utf-8")
+            with self.assertRaisesRegex(I18nFileLoadError, path.name):
+                resource_loader.load_translation_file(path.name, directory)
+
+    def test_empty_mapping_and_list_translation_values_remain_valid(self):
+        resource_loader.init_json_loader()
+        for data in ({}, {"months": ["January", "February"]}):
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "messages.en.json"
+                path.write_text(json.dumps({"en": data}), encoding="utf-8")
+                self.assertEqual(resource_loader.load_resource(path, "en"), data)
+
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
             resource_loader.load_resource("foo.bar", "baz")
