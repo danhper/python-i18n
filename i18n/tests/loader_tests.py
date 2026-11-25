@@ -304,6 +304,55 @@ class TestFileLoader(unittest.TestCase):
         self.assertIn("ほげ", data)
         self.assertEqual("ホゲ", data["ほげ"])
 
+    def test_equivalent_relative_paths_have_the_same_namespace(self):
+        for filename in (
+            os.path.join(".", "app", "messages.en.json"),
+            os.path.join("app", ".", "messages.en.json"),
+            os.path.join("unused", "..", "app", "messages.en.json"),
+        ):
+            with self.subTest(filename=filename):
+                self.assertEqual(
+                    resource_loader.get_namespace_from_filepath(filename, "en"),
+                    "app.messages",
+                )
+
+    def test_loaded_file_is_accessible_by_its_directory_namespace(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [])
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory) / "app"
+            app.mkdir()
+            (app / "messages.en.json").write_text(
+                json.dumps({"en": {"greeting": "Hello"}}), encoding="utf-8"
+            )
+            resource_loader.load_translation_file(
+                os.path.join(".", "app", "messages.en.json"), directory, "en"
+            )
+            self.assertEqual(t("app.messages.greeting", locale="en"), "Hello")
+
+    @unittest.skipUnless(os.altsep, "platform has no alternate path separator")
+    def test_alternate_separators_do_not_become_namespace_characters(self):
+        assert os.altsep is not None
+        filename = "app" + os.altsep + "pages" + os.sep + "messages.en.json"
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath(filename, "en"),
+            "app.pages.messages",
+        )
+
+    def test_custom_delimiters_and_plain_filenames_keep_their_behavior(self):
+        config.set("namespace_delimiter", ":")
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath(
+                os.path.join("app", "messages.en.json"), "en"
+            ),
+            "app:messages",
+        )
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath("messages.en.json", "en"),
+            "messages",
+        )
+
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {
             "foo": "foo.ja.yml",

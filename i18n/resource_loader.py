@@ -59,6 +59,7 @@ def load_config(filename):
 
 
 def get_namespace_from_filepath(filename, locale=None):
+    filename = os.path.normpath(filename)
     namespace = (
         os.path.dirname(filename)
         .strip(os.sep)
