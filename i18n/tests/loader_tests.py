@@ -4,6 +4,7 @@ import os.path
 import sys
 import tempfile
 import unittest
+import zipfile
 
 # Python 3 only: always import reload from importlib
 from importlib import reload
@@ -76,6 +77,45 @@ class TestFileLoader(unittest.TestCase):
             translations.container = {}
             resource_loader.load_all(["fr"])
             self.assertEqual(t("app.dialogs.save", locale="fr"), "Enregistrer")
+
+    def test_nonmapping_json_roots_raise_loader_errors(self):
+        resource_loader.init_json_loader()
+        for data in (None, True, 42, "en", ["en"]):
+            for root_data in ("en", None):
+                with (
+                    self.subTest(data=data, root_data=root_data),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    path = Path(directory) / "messages.en.json"
+                    path.write_text(json.dumps(data), encoding="utf-8")
+                    with self.assertRaisesRegex(I18nFileLoadError, path.name):
+                        resource_loader.load_resource(path, root_data)
+
+    def test_nonmapping_locale_data_raises_loader_errors(self):
+        resource_loader.init_json_loader()
+        for data in (None, True, 42, "hello", ["hello"]):
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "messages.en.json"
+                path.write_text(json.dumps({"en": data}), encoding="utf-8")
+                with self.assertRaisesRegex(I18nFileLoadError, "expected a mapping"):
+                    resource_loader.load_translation_file(path.name, directory)
+
+    @unittest.skipUnless(yaml_available, "yaml library not available")
+    def test_empty_yaml_raises_loader_error(self):
+        resource_loader.init_yaml_loader()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "messages.en.yml"
+            path.write_text("# Translations have not been added yet.\n", encoding="utf-8")
+            with self.assertRaisesRegex(I18nFileLoadError, path.name):
+                resource_loader.load_translation_file(path.name, directory)
+
+    def test_empty_mapping_and_list_translation_values_remain_valid(self):
+        resource_loader.init_json_loader()
+        for data in ({}, {"months": ["January", "February"]}):
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "messages.en.json"
+                path.write_text(json.dumps({"en": data}), encoding="utf-8")
+                self.assertEqual(resource_loader.load_resource(path, "en"), data)
 
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
@@ -304,6 +344,45 @@ class TestFileLoader(unittest.TestCase):
             finally:
                 os.chdir(original_directory)
 
+    def test_memoization_uses_the_current_encoding(self):
+        resource_loader.init_json_loader()
+        config.set("enable_memoization", True)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_bytes(b'{"settings": {"greeting": "\xc3\xa9"}}')
+            config.set("encoding", "latin-1")
+            first = resource_loader.load_resource(path, "settings")
+            self.assertEqual(first["greeting"], "\u00c3\u00a9")
+
+            config.set("encoding", "utf-8")
+            self.assertEqual(
+                resource_loader.load_resource(path, "settings")["greeting"], "\u00e9"
+            )
+
+            path.unlink()
+            config.set("encoding", "latin-1")
+            self.assertEqual(resource_loader.load_resource(path, "settings"), first)
+
+    def test_package_memoization_uses_the_current_encoding(self):
+        resource_loader.init_json_loader()
+        config.set("enable_memoization", True)
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            zipfile.ZipFile(Path(directory) / "translations.zip", "w") as archive,
+        ):
+            archive.writestr(
+                "settings.json", b'{"settings": {"greeting": "\xc3\xa9"}}'
+            )
+            resource = zipfile.Path(archive, "settings.json")
+            config.set("encoding", "latin-1")
+            first = resource_loader.load_resource(resource, "settings")
+            self.assertEqual(first["greeting"], "\u00c3\u00a9")
+            config.set("encoding", "utf-8")
+            self.assertEqual(
+                resource_loader.load_resource(resource, "settings")["greeting"],
+                "\u00e9",
+            )
+
     @unittest.skipUnless(json_available, "json library not available")
     def test_load_file_with_strange_encoding(self):
         resource_loader.init_json_loader()
@@ -313,6 +392,55 @@ class TestFileLoader(unittest.TestCase):
         )
         self.assertIn("ほげ", data)
         self.assertEqual("ホゲ", data["ほげ"])
+
+    def test_equivalent_relative_paths_have_the_same_namespace(self):
+        for filename in (
+            os.path.join(".", "app", "messages.en.json"),
+            os.path.join("app", ".", "messages.en.json"),
+            os.path.join("unused", "..", "app", "messages.en.json"),
+        ):
+            with self.subTest(filename=filename):
+                self.assertEqual(
+                    resource_loader.get_namespace_from_filepath(filename, "en"),
+                    "app.messages",
+                )
+
+    def test_loaded_file_is_accessible_by_its_directory_namespace(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        config.set("load_path", [])
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory) / "app"
+            app.mkdir()
+            (app / "messages.en.json").write_text(
+                json.dumps({"en": {"greeting": "Hello"}}), encoding="utf-8"
+            )
+            resource_loader.load_translation_file(
+                os.path.join(".", "app", "messages.en.json"), directory, "en"
+            )
+            self.assertEqual(t("app.messages.greeting", locale="en"), "Hello")
+
+    @unittest.skipUnless(os.altsep, "platform has no alternate path separator")
+    def test_alternate_separators_do_not_become_namespace_characters(self):
+        assert os.altsep is not None
+        filename = "app" + os.altsep + "pages" + os.sep + "messages.en.json"
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath(filename, "en"),
+            "app.pages.messages",
+        )
+
+    def test_custom_delimiters_and_plain_filenames_keep_their_behavior(self):
+        config.set("namespace_delimiter", ":")
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath(
+                os.path.join("app", "messages.en.json"), "en"
+            ),
+            "app:messages",
+        )
+        self.assertEqual(
+            resource_loader.get_namespace_from_filepath("messages.en.json", "en"),
+            "messages",
+        )
 
     def test_get_namespace_from_filepath_with_filename(self):
         tests = {

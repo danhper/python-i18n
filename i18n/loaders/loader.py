@@ -1,4 +1,5 @@
 import os
+from collections.abc import Mapping
 
 from .. import config
 
@@ -35,6 +36,7 @@ class Loader:
             else:
                 # Package Traversables need not represent filesystem paths.
                 cache_key = str(filename)
+            cache_key = (cache_key, config.get("encoding"))
             if cache_key not in self.memoization_dict:
                 self.memoization_dict[cache_key] = self._load_file_data(filename)
             return self.memoization_dict[cache_key]
@@ -47,7 +49,7 @@ class Loader:
         )
 
     def check_data(self, data, root_data):
-        return True if root_data is None else root_data in data
+        return root_data is None or (isinstance(data, Mapping) and root_data in data)
 
     def get_data(self, data, root_data):
         return data if root_data is None else data[root_data]
@@ -59,4 +61,9 @@ class Loader:
             raise I18nFileLoadError(
                 f"error getting data from {filename}: {root_data} not defined"
             )
-        return self.get_data(data, root_data)
+        resource = self.get_data(data, root_data)
+        if not isinstance(resource, Mapping):
+            raise I18nFileLoadError(
+                f"error getting data from {filename}: expected a mapping"
+            )
+        return resource
