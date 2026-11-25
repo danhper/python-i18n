@@ -120,7 +120,7 @@ def load_directory(directory, locale=None):
 
 
 def load_all(locales=None):
-    """Eagerly load configured translation files, including directory namespaces."""
+    """Eagerly load configured files and package resources with their namespaces."""
     if locales is None:
         locales = config.get("available_locales")
     patterns = [
@@ -151,6 +151,30 @@ def load_all(locales=None):
                             os.path.join(directory, filename), root
                         )
                         load_translation_file(relative_path, root, locale)
+
+    def load_package_directory(directory, relative_directory=""):
+        entries = sorted(directory.iterdir(), key=lambda entry: entry.name)
+        for resource in entries:
+            if not resource.is_file():
+                continue
+            for locale, pattern in patterns:
+                if pattern.fullmatch(resource.name):
+                    root_data = None if config.get("skip_locale_root_data") else locale
+                    data = load_resource(resource, root_data)
+                    relative_name = os.path.join(relative_directory, resource.name)
+                    load_translation_dic(
+                        data, get_namespace_from_filepath(relative_name, locale), locale
+                    )
+        for resource in entries:
+            if resource.is_dir():
+                load_package_directory(
+                    resource, os.path.join(relative_directory, resource.name)
+                )
+
+    for package in config.get("load_package_path"):
+        if config.get("file_format") == "py":
+            raise I18nFileLoadError("package resources require a text-based loader")
+        load_package_directory(files(package))
 
 
 def search_translation(key, locale=None):

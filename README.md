@@ -117,10 +117,12 @@ i18n.load_all()
 ```
 
 `load_all()` reads matching files recursively under every configured load path,
-preserving file and directory namespaces and the active locale. It uses the
+then every `load_package_path`, including ZIP-imported packages. It preserves
+file and directory namespaces, source order and the active locale, using the
 configured `filename_format`, `file_format` and encoding. You can instead pass
-`i18n.load_all(['fr'])` to load only selected locales. Missing directories and
-invalid translation files raise their usual loader errors during startup.
+`i18n.load_all(['fr'])` to load only selected locales. Missing directories or
+packages and invalid translation resources raise their usual errors during
+startup. Package resources require a text-based loader, as for lazy loading.
 
 Subsequent lookups of loaded keys use the translation container. Missing keys
 still follow the normal search and fallback behavior; preloading does not cache
