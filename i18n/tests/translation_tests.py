@@ -63,6 +63,29 @@ class TestTranslationFormat(unittest.TestCase):
     def test_basic_placeholder(self):
         self.assertEqual(t("foo.hi", name="Bob"), "Hello Bob !")
 
+    def test_placeholder_named_self(self):
+        translations.add("foo.self", "Hello %{self}")
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                config.set("error_on_missing_placeholder", strict)
+                self.assertEqual(t("foo.self", self="Bob"), "Hello Bob")
+
+    def test_list_placeholder_named_self(self):
+        translations.add("foo.self", ["Hello %{self}", ["%{self}"]])
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                config.set("error_on_missing_placeholder", strict)
+                self.assertEqual(t("foo.self", self="Bob"), ["Hello Bob", ["Bob"]])
+
+    def test_plural_placeholder_named_self(self):
+        translations.add(
+            "foo.self", {"one": "%{self} has one", "many": "%{self} has %{count}"}
+        )
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                config.set("error_on_missing_placeholder", strict)
+                self.assertEqual(t("foo.self", self="Bob", count=2), "Bob has 2")
+
     def test_missing_placehoder(self):
         self.assertEqual(t("foo.hi"), "Hello %{name} !")
 
