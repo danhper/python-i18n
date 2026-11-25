@@ -193,7 +193,7 @@ def search_package(package, namespace, locale):
             load_translation_dic(
                 data, get_namespace_from_filepath(relative_name, locale), locale
             )
-            return
+        # A namespace can have its own file as well as child directories.
         subdirectory = root.joinpath(part)
         if not subdirectory.is_dir():
             return
@@ -215,7 +215,7 @@ def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
         os.path.join(search_directory, seeked_file)
     ):
         load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
-    elif splitted_namespace[0] in dir_content and os.path.isdir(
+    if splitted_namespace[0] in dir_content and os.path.isdir(
         os.path.join(search_directory, splitted_namespace[0])
     ):
         recursive_search_dir(

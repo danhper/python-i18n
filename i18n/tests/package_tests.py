@@ -73,6 +73,15 @@ class TestPackageResources(unittest.TestCase):
         translations.container = {}
         self.assertEqual(t("nested/greetings/hello", locale="en"), "Nested")
 
+    def test_zip_prefix_file_does_not_hide_child_namespace(self):
+        with zipfile.ZipFile(self.archive, "a") as archive:
+            archive.writestr(
+                "i18n_test_resources/nested.en.json",
+                json.dumps({"en": {"title": "Prefix"}}),
+            )
+        self.assertEqual(t("nested.greetings.hello", locale="en"), "Nested")
+        self.assertEqual(t("nested.title", locale="en"), "Prefix")
+
     def test_zip_package_without_filename_namespace(self):
         config.set("filename_format", "{locale}.{format}")
         self.assertEqual(t("hello", locale="en"), "Hello from root")

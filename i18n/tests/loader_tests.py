@@ -28,6 +28,56 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
 
+    def test_prefix_translation_files_do_not_hide_child_namespaces(self):
+        with tempfile.TemporaryDirectory() as directory:
+            files = {
+                "app.en.json": {"title": "Application"},
+                os.path.join("app", "dialogs.en.json"): {"title": "Dialogs"},
+                os.path.join("app", "dialogs", "confirm.en.json"): {"save": "Save"},
+            }
+            for filename, data in files.items():
+                path = os.path.join(directory, filename)
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w", encoding="utf-8") as handle:
+                    json.dump({"en": data}, handle)
+            config.set("load_path", [directory])
+            config.set("file_format", "json")
+            resource_loader.init_json_loader()
+            for delimiter in (".", "/"):
+                with self.subTest(delimiter=delimiter):
+                    config.set("namespace_delimiter", delimiter)
+                    translations.container = {}
+                    self.assertEqual(
+                        t(delimiter.join(("app", "dialogs", "confirm", "save"))), "Save"
+                    )
+                    self.assertEqual(t(delimiter.join(("app", "title"))), "Application")
+                    self.assertEqual(
+                        t(delimiter.join(("app", "dialogs", "title"))), "Dialogs"
+                    )
+
+    def test_child_namespace_is_searched_before_fallback_locale(self):
+        with tempfile.TemporaryDirectory() as directory:
+            os.mkdir(os.path.join(directory, "app"))
+            for filename, data in (
+                ("app.fr.json", {"fr": {"title": "Application"}}),
+                ("app.en.json", {"en": {"dialogs": {"save": "Save"}}}),
+                (
+                    os.path.join("app", "dialogs.fr.json"),
+                    {"fr": {"save": "Enregistrer"}},
+                ),
+            ):
+                with open(
+                    os.path.join(directory, filename), "w", encoding="utf-8"
+                ) as handle:
+                    json.dump(data, handle)
+            config.set("load_path", [directory])
+            config.set("file_format", "json")
+            resource_loader.init_json_loader()
+            self.assertEqual(t("app.dialogs.save", locale="fr"), "Enregistrer")
+            translations.container = {}
+            resource_loader.load_all(["fr"])
+            self.assertEqual(t("app.dialogs.save", locale="fr"), "Enregistrer")
+
     def test_nonmapping_json_roots_raise_loader_errors(self):
         resource_loader.init_json_loader()
         for data in (None, True, 42, "en", ["en"]):
