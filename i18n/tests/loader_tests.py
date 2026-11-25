@@ -27,6 +27,39 @@ class TestFileLoader(unittest.TestCase):
         config.set("filename_format", "{namespace}.{locale}.{format}")
         config.set("encoding", "utf-8")
 
+    def test_lazy_loads_filename_namespaces_with_multiple_components(self):
+        resource_loader.init_json_loader()
+        config.set("file_format", "json")
+        for directory_namespace, filename_format, delimiter in (
+            ("", "{namespace}.{locale}.{format}", "."),
+            ("forms", "{locale}.{namespace}.{format}", "."),
+            ("", "{namespace}.{locale}.{format}", "_"),
+        ):
+            with self.subTest(
+                directory=directory_namespace,
+                filename_format=filename_format,
+                delimiter=delimiter,
+            ), tempfile.TemporaryDirectory() as directory:
+                translations.container.clear()
+                config.set("filename_format", filename_format)
+                config.set("namespace_delimiter", delimiter)
+                config.set("load_path", [directory])
+                folder = Path(directory) / directory_namespace
+                folder.mkdir(exist_ok=True)
+                filename = filename_format.format(
+                    namespace=delimiter.join(("validation", "errors")),
+                    locale="en",
+                    format="json",
+                )
+                (folder / filename).write_text(
+                    json.dumps({"en": {"field": {"required": "Required"}}}),
+                    encoding="utf-8",
+                )
+                parts = ["validation", "errors", "field", "required"]
+                if directory_namespace:
+                    parts.insert(0, directory_namespace)
+                self.assertEqual(t(delimiter.join(parts)), "Required")
+
     def test_load_unavailable_extension(self):
         with self.assertRaisesRegex(I18nFileLoadError, "no loader .*"):
             resource_loader.load_resource("foo.bar", "baz")

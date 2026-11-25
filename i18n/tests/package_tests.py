@@ -73,6 +73,16 @@ class TestPackageResources(unittest.TestCase):
         translations.container = {}
         self.assertEqual(t("nested/greetings/hello", locale="en"), "Nested")
 
+    def test_zip_package_filename_namespaces_with_multiple_components(self):
+        with zipfile.ZipFile(self.archive, "a") as archive:
+            for directory in ("", "nested/"):
+                archive.writestr(
+                    "i18n_test_resources/" + directory + "validation.errors.en.json",
+                    json.dumps({"en": {"field": {"required": "Required"}}}),
+                )
+        self.assertEqual(t("validation.errors.field.required"), "Required")
+        self.assertEqual(t("nested.validation.errors.field.required"), "Required")
+
     def test_zip_package_without_filename_namespace(self):
         config.set("filename_format", "{locale}.{format}")
         self.assertEqual(t("hello", locale="en"), "Hello from root")

@@ -169,6 +169,17 @@ def search_translation(key, locale=None):
         search_package(package, namespace, locale)
 
 
+def _filename_candidates(namespace, locale):
+    # A file namespace may contain the namespace delimiter itself.
+    lengths = range(len(namespace), 0, -1) if namespace else [0]
+    for length in lengths:
+        yield config.get("filename_format").format(
+            namespace=config.get("namespace_delimiter").join(namespace[:length]),
+            format=config.get("file_format"),
+            locale=locale,
+        )
+
+
 def search_package(package, namespace, locale):
     if config.get("file_format") == "py":
         raise I18nFileLoadError("package resources require a text-based loader")
@@ -177,22 +188,20 @@ def search_package(package, namespace, locale):
     if not namespace and "{namespace}" in filename_format:
         return
     directories = []
-    for part in namespace or [""]:
-        filename = filename_format.format(
-            namespace=part, format=config.get("file_format"), locale=locale
-        )
-        resource = root.joinpath(filename)
+    for index, part in enumerate(namespace or [""]):
         # Early 3.9 zipfile.Path.is_file() reports missing entries as files,
         # and Traversable has no exists(), so confirm the name is listed.
         names = {entry.name for entry in root.iterdir()}
-        if filename in names and resource.is_file():
-            root_data = None if config.get("skip_locale_root_data") else locale
-            data = load_resource(resource, root_data)
-            relative_name = os.path.join(*(directories + [filename]))
-            load_translation_dic(
-                data, get_namespace_from_filepath(relative_name, locale), locale
-            )
-            return
+        for filename in _filename_candidates(namespace[index:], locale):
+            resource = root.joinpath(filename)
+            if filename in names and resource.is_file():
+                root_data = None if config.get("skip_locale_root_data") else locale
+                data = load_resource(resource, root_data)
+                relative_name = os.path.join(*(directories + [filename]))
+                load_translation_dic(
+                    data, get_namespace_from_filepath(relative_name, locale), locale
+                )
+                return
         subdirectory = root.joinpath(part)
         if not subdirectory.is_dir():
             return
@@ -205,16 +214,15 @@ def recursive_search_dir(splitted_namespace, directory, root_dir, locale=None):
         locale = config.get("locale")
     if not splitted_namespace:
         return
-    seeked_file = config.get("filename_format").format(
-        namespace=splitted_namespace[0], format=config.get("file_format"), locale=locale
-    )
     search_directory = os.path.join(root_dir, directory)
     dir_content = os.listdir(search_directory)
-    if seeked_file in dir_content and os.path.isfile(
-        os.path.join(search_directory, seeked_file)
-    ):
-        load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
-    elif splitted_namespace[0] in dir_content and os.path.isdir(
+    for seeked_file in _filename_candidates(splitted_namespace, locale):
+        if seeked_file in dir_content and os.path.isfile(
+            os.path.join(search_directory, seeked_file)
+        ):
+            load_translation_file(os.path.join(directory, seeked_file), root_dir, locale)
+            return
+    if splitted_namespace[0] in dir_content and os.path.isdir(
         os.path.join(search_directory, splitted_namespace[0])
     ):
         recursive_search_dir(
