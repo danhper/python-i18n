@@ -10,7 +10,7 @@ class TranslationFormatter(Template):
     def __init__(self, template):
         super().__init__(template)
 
-    def format(self, **kwargs):
+    def format(self, /, **kwargs):
         if config.get("error_on_missing_placeholder"):
             return self.substitute(**kwargs)
         else:
